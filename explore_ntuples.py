@@ -63,6 +63,29 @@ if output == True:
 else:
 	plt.show()
 
+print("Plotting track_local_Dx...")
+plt.hist(tree[b'track_local_Dx'].array(), bins=50, facecolor='blue', alpha=0.5, ec='black', histtype='stepfilled')
+plt.xlabel('track_local_Dx')
+plt.ylabel('entries')
+plt.title('track_local_Dx')
+if output == True:
+	#plt.savefig(plot_dir + "track_eta.pdf", format="pdf")
+	plt.savefig(plot_dir + "track_local_Dx.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
+
+print("Plotting track_local_Dy...")
+plt.hist(tree[b'track_local_Dy'].array(), bins=50, facecolor='red', alpha=0.5, ec='black', histtype='stepfilled')
+plt.xlabel('track_local_Dy')
+plt.ylabel('entries')
+plt.title('track_local_Dy')
+if output == True:
+	#plt.savefig(plot_dir + "track_eta.pdf", format="pdf")
+	plt.savefig(plot_dir + "track_local_Dy.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
 
 
     
@@ -96,8 +119,9 @@ plt.close()
 df_all = tree.pandas.df([b'track_eta',b'hit_sizeX',b'hit_sizeY', b'hit_charge'])
 df_all.head()
 
-print("Selecting events with hit_sizeX < 1e6")
-df_all = df_all.query('hit_sizeX < 1e6')
+threshold = 3e5
+print("Selecting events with hit_sizeX < %f" % threshold)
+df_all = df_all.query('abs(hit_sizeX) < 3e5')
 
 #plt.subplot(1,2,1)
 print("Plotting scatter plots hit_sizeX, hit_sizeY vs track_eta with hit_sizeX < 1e6...")
@@ -165,12 +189,23 @@ else:
 	plt.show()
 
 print("Plotting scatter plot of hit_sizeY vs hit_charge...")
-plt.scatter(df_all['hit_charge'],df_all['hit_sizeY'], marker='.', color='blue', s=1)
+plt.scatter(df_all['hit_charge'],df_all['hit_sizeY'], marker='.', color='red', s=1)
 plt.xlabel('hit_charge')
 plt.ylabel('hit_sizeY')
 plt.title('Hit Y size vs hit_charge')
 if output == True:
 	plt.savefig(plot_dir + "hit_sizeY_vs_hit_charge.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
+
+print("Plotting scatter plot of hit_charge vs track_eta...")
+plt.scatter(df_all['track_eta'],df_all['hit_charge'], marker='.', color='yellow', s=1)
+plt.xlabel('track $\eta$')
+plt.ylabel('hit_charge')
+plt.title('hit_charge vs track $\eta$')
+if output == True:
+	plt.savefig(plot_dir + "hit_charge_vs_track_eta.png", format="png", dpi=300)
 	plt.close()
 else:
 	plt.show()
