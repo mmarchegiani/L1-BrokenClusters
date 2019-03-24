@@ -25,6 +25,7 @@ tree = file[b'a/tree;1']
 #tree.keys()
 print(str(tree.name) + " contains " + str(len(tree)) + " entries")
 
+"""
 print("Plotting global_eta histogram...")
 plt.hist(tree[b'global_eta'].array(), bins=100, facecolor='yellow', ec='black', histtype='stepfilled')
 plt.xlabel('global $\eta$')
@@ -48,9 +49,14 @@ if output == True:
 	plt.close()
 else:
 	plt.show()
-
-
-df_grid = tree.pandas.df([b'pos_x', b'pos_y', b'size', b'cols', b'rows', b'x', b'y', b'global_eta', b'global_phi', b'instaLumi', b'bx'])
+"""
+entrystop_ = None
+if len(tree) > 1.1e8:
+	entrystop_ = 1.1e8
+	print("Dataframe truncated to 1.1e8 events")
+else:
+	print("Dataframe keeped with all the events")
+df_grid = tree.pandas.df([b'pos_x', b'pos_y', b'size', b'cols', b'rows', b'x', b'y', b'global_eta', b'global_phi', b'instaLumi', b'bx'], entrystop=entrystop_)
 print(df_grid.head())
 
 #df_grid['pos_x']
@@ -131,15 +137,41 @@ else:
 #df_grid75.head()
 
 print("Plotting grid (7->5) global_eta...")
-plt.hist(df_grid75['global_eta'], bins=100, color="yellow", ec="black", histtype="stepfilled")
+n_eta7, bins_eta7, patches = plt.hist(df_grid7['global_eta'], bins=100, color="yellow", ec="black", histtype="stepfilled")
+plt.close()
+n_eta75, bins_eta75, patches = plt.hist(df_grid75['global_eta'], bins=100, color="yellow", ec="black", histtype="stepfilled")
 plt.title("Global eta (7->5)")
+prob_eta75 = []
+
 if output == True:
 	plt.savefig(plot_dir + "cols7_size5_eta.png", format="png", dpi=300)
 	plt.close()
 else:
 	plt.show()
+
+print("Plotting scatter plot of prob_eta75...")
+
+step = bins_eta75[1] - bins_eta75[0]
+for i in range(len(bins_eta75)-1):
+	if n_eta7[i] == 0:
+		prob_eta75.append(np.nan)
+	else:
+		prob_eta75.append(n_eta75[i]/n_eta7[i])
+bins_eta75 = np.delete(bins_eta75, -1)
+plt.scatter(bins_eta75, prob_eta75, marker='.', color='blue', s=3)
+plt.xlabel('eta')
+plt.ylabel('prob splitting(7->5)')
+plt.title('prob splitting (7->5) vs eta')
+if output == True:
+	plt.savefig(plot_dir + "prob_eta75.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
+
 print("Plotting grid (7->5) global_phi...")
-plt.hist(df_grid75['global_phi'], bins=100, color="blue", ec="black", histtype="stepfilled")
+n_phi7, bins_phi7, patches = plt.hist(df_grid7['global_phi'], bins=100, color="blue", ec="black", histtype="stepfilled")
+plt.close()
+n_phi75, bins_phi75, patches = plt.hist(df_grid75['global_phi'], bins=100, color="blue", ec="black", histtype="stepfilled")
 plt.title("Global phi (7->5)")
 if output == True:
 	plt.savefig(plot_dir + "cols7_size5_phi.png", format="png", dpi=300)
@@ -148,8 +180,27 @@ else:
 	plt.show()
 #plt.hist(df_grid75['global_phi'], color="green", ec="black", histtype="stepfilled")
 
+step = bins_phi75[1] - bins_phi75[0]
+for i in range(len(bins_phi75)):
+	if n_phi7[i] == 0:
+		prob_phi75.append(np.nan)
+	else:
+		prob_phi75.append(n_phi75[i]/n_phi7[i])
+bins_phi75 = np.delete(bins_phi75, -1)
+plt.scatter(bins_phi75, prob_phi75, marker='.', color='blue', s=3)
+plt.xlabel('phi')
+plt.ylabel('prob splitting(7->5)')
+plt.title('prob splitting (7->5) vs phi')
+if output == True:
+	plt.savefig(plot_dir + "prob_phi75.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
+
 print("Plotting grid (7->5) instaLumi...")
-plt.hist(df_grid75['instaLumi'], bins=20, color="green", ec="black", histtype="stepfilled")
+n_lumi7, bins_lumi7, patches = plt.hist(df_grid7['instaLumi'], bins=20, color="green", ec="black", histtype="stepfilled")
+plt.close()
+n_lumi75, bins_lumi75, patches = plt.hist(df_grid75['instaLumi'], bins=20, color="green", ec="black", histtype="stepfilled")
 plt.title("instaLumi (7->5)")
 if output == True:
 	plt.savefig(plot_dir + "cols7_size5_instaLumi.png", format="png", dpi=300)
@@ -157,11 +208,47 @@ if output == True:
 else:
 	plt.show()
 
+step = bins_lumi75[1] - bins_lumi75[0]
+for i in range(len(bins_lumi75)):
+	if n_lumi7[i] == 0:
+		prob_lumi75.append(np.nan)
+	else:
+		prob_lumi75.append(n_lumi75[i]/n_lumi7[i])
+bins_lumi75 = np.delete(bins_lumi75, -1)
+plt.scatter(bins_lumi75, prob_lumi75, marker='.', color='blue', s=3)
+plt.xlabel('lumi')
+plt.ylabel('prob splitting(7->5)')
+plt.title('prob splitting (7->5) vs lumi')
+if output == True:
+	plt.savefig(plot_dir + "prob_lumi75.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
+
 print("Plotting grid (7->5) bx...")
-plt.hist(df_grid75['bx'], bins=50, color="red", ec="black", histtype="stepfilled", log=True)
+n_bx7, bins_bx7, patches = plt.hist(df_grid7['bx'], bins=50, color="red", ec="black", histtype="stepfilled", log=True)
+plt.close()
+n_bx75, bins_bx75, patches = plt.hist(df_grid75['bx'], bins=50, color="red", ec="black", histtype="stepfilled", log=True)
 plt.title("bx (7->5)")
 if output == True:
 	plt.savefig(plot_dir + "cols7_size5_bx.png", format="png", dpi=300)
+	plt.close()
+else:
+	plt.show()
+
+step = bins_bx75[1] - bins_bx75[0]
+for i in range(len(bins_bx75)):
+	if n_bx7[i] == 0:
+		prob_bx75.append(np.nan)
+	else:
+		prob_bx75.append(n_bx75[i]/n_bx7[i])
+bins_bx75 = np.delete(bins_bx75, -1)
+plt.scatter(bins_bx75, prob_bx75, marker='.', color='blue', s=3)
+plt.xlabel('bx')
+plt.ylabel('prob splitting(7->5)')
+plt.title('prob splitting (7->5) vs bx')
+if output == True:
+	plt.savefig(plot_dir + "prob_bx75.png", format="png", dpi=300)
 	plt.close()
 else:
 	plt.show()
