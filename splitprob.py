@@ -2,54 +2,58 @@ import sys, os, pandas
 import uproot
 import matplotlib.pyplot as plt
 import numpy as np
+import splitlib as sp
 
-def splitprob(df_full, df_broken, nfull, nbroken, bins=100, varname="", output=True, plot_dir="./"):
-	splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
-	print("Plotting histograms " + splitmode + " " + varname + "...")
-	n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color="yellow", ec="black", histtype="stepfilled", log=True)
-	plt.title(varname + " cols=" + str(nfull))
+if(len(sys.argv) < 2):
+	sys.exit("File name required as first argument.")
 
-	n_broken, bins_broken, patches_broken = plt.hist(df_broken[varname], bins=bins, color="orange", ec="black", histtype="stepfilled", log=True)
-	plt.title(varname + " cols=" + str(nfull) + " size=" + str(nbroken))
-	
-	if output == True:
-		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_" + varname + ".png", format="png", dpi=300)
-		plt.close()
-	else:
-		plt.show()
-	
-	prob = []
-	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
+if(len(sys.argv) < 4):
+	sys.exit("'nfull' and 'nbroken' required as second, third arguments.")
 
-	bin_size = bins_broken[1] - bins_broken[0]
-	bins_broken = np.linspace(start=bins_broken[0] + 0.5*bin_size, stop=bins_broken[-2] + 0.5*bin_size, num=len(bins_broken) - 1, endpoint=True)
+if(len(sys.argv) < 5):
+	sys.argv.append("-nooutput")
 
-	mylist = range(len(bins_broken))
-	for i in mylist:
-		if n_full[i] == 0:
-			bins_broken = np.delete(bins_broken, i)
-			n_broken = np.delete(n_broken, i)
-			bins_full = np.delete(bins_full, i)
-			n_full = np.delete(n_full, i)
-		else:
-			prob.append(n_broken[i]/n_full[i])
+filename = sys.argv[1]
+nfull = sys.argv[2]
+nbroken = sys.argv[3]
 
-	#bins_broken = np.delete(bins_broken, -1)
-	#plt.scatter(bins_broken, prob, marker='.', color='blue', s=3)
-	sigma = []
-	for i in range(len(prob)):
-		sigma.append(float(prob[i]*np.sqrt(1./n_broken[i] + 1./n_full[i])))		# We propagate the error on the ratio assuming poissonian uncertainties
+output = False
+if (sys.argv[4] == "-o") | (sys.argv[4] == "-output"):
+	output = True
 
-	plt.errorbar(bins_broken, prob, yerr=np.array(sigma), fmt='o', ecolor='r', c='r', label="data")
+#filename = "/scratch/mmarcheg/lumi_data/Run300806.root"
+plot_dir = "../ntuplesPixel/plots/" + (filename.split("/")[-1]).split(".")[-2] + "/"
+#os.mkdir(plot_dir)
+if output == True:
+	print("Plots will be saved in " + plot_dir)
+print("Opening %s" % filename)
+file = uproot.open(filename)
 
-	plt.xlabel(varname)
-	plt.ylabel("prob" + splitmode)
-	plt.title("prob splitting " + splitmode + " vs " + varname)
+#file.allkeys()
+tree = file[b'a/tree;1']
+#tree.keys()
+print(str(tree.name) + " contains " + str(len(tree)) + " entries")
 
-	if output == True:
-		plt.savefig(plot_dir + "prob_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
-		plt.close()
-	else:
-		plt.show()
+entrystop_ = None
+if len(tree) > 1.1e8:
+	entrystop_ = 1.1e8
+	print("Dataframe truncated to 1.1e8 events")
+else:
+	print("Dataframe keeped with all the events")
+df_grid = tree.pandas.df([b'size', b'cols', b'rows', b'x', b'y', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
+print(df_grid.head())
 
-	return
+print("Dataframe query...")
+df_grid_full = df_grid.query('cols == 7')
+df_grid_broken = df_grid7.query('size == 5')
+
+varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
+bins = [100, 100, 20, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 100]
+
+# Iteration over 5 variables and over all possible rows
+rows_max = df_grid['rows'].max()
+rows = range(1, rows_max + 1)
+for nrows in rows:
+	df_grid, df_grid_full, df_grid_broken = select(tree, nfull, nbroken, nrows)		# Function still to be tested
+	for i in range(len(varlist)):
+		sp.splitprob(df_grid_full, df_grid_broken, 7, 5, bins=bins[i], varname=varlist[i], output=output, plot_dir=plot_dir)
