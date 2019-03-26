@@ -32,7 +32,7 @@ file = uproot.open(filename)
 #file.allkeys()
 tree = file[b'a/tree;1']
 #tree.keys()
-print(str(tree.name) + " contains " + str(len(tree)) + " entries")
+print(str(tree.name) + " contains %d (%.1E) entries" % (len(tree), len(tree)))
 
 df_grid, df_grid_full, df_grid_broken = sp.select_cols(tree, nfull, nbroken)		# Function still to be tested
 varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]

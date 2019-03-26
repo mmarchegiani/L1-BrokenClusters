@@ -1,7 +1,6 @@
 #!/bin/sh
 python3.6 splitprob.py /scratch/mmarcheg/lumi_data/Run300806.root 7 5 -o
 python3.6 splitprob.py /scratch/mmarcheg/lumi_data/Run299593.root 7 5 -o
-python3.6 splitprob.py /scratch/mmarcheg/lumi_data/Run300806.root 7 5 -o
 python3.6 splitprob.py /scratch/mmarcheg/lumi_data/Run300811.root 7 5 -o
 python3.6 splitprob.py /scratch/mmarcheg/lumi_data/Run300812.root 7 5 -o
 python3.6 splitprob.py /scratch/mmarcheg/lumi_data/Run300816.root 7 5 -o

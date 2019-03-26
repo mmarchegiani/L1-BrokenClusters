@@ -129,9 +129,9 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 # The 3 dataframes are returned by the function
 def select_cols(tree, nfull, nbroken):
 	entrystop_ = None
-	if len(tree) > 1.1e8:
-		entrystop_ = 1.1e8
-		print("Dataframe truncated to 1.1e8 events")
+	if len(tree) > 53605236:		# HARDCODED
+		entrystop_ = 53605236
+		print("Dataframe truncated to %.1E events" % entrystop_)
 	else:
 		print("Dataframe keeped with all the events")
 	df_grid = tree.pandas.df([b'size', b'cols', b'rows', b'x', b'y', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
