@@ -11,6 +11,8 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	nfull = df_full['cols'][index_list[0]]
 	nbroken = df_full['size'][index_list[0]]
 	nrows = df_full['rows'][index_list[0]]
+	bx_low = 1980
+	bx_high = 2050
 
 	if nrows < 10:
 		rowname = "rows0" + str(nrows)
@@ -34,15 +36,17 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 
 	splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
 	print("Plotting histograms " + splitmode + " " + varname + "...")
-	plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled", log=True, stacked=True, label="cols=" + str(nfull))
+	n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled", log=True, stacked=True, label="cols=" + str(nfull))
 
-	plt.hist(df_broken[varname], bins=bins, color=colors2[index], ec="black", histtype="stepfilled", log=True, stacked=True, label="broken")
+	plt.hist(df_broken[varname], bins=bins_full, color=colors2[index], ec="black", histtype="stepfilled", log=True, stacked=True, label="broken")
 	plt.title(varname + " cols=" + str(nfull) + " size=" + str(nbroken) + " rows=" + str(nrows) + " stacked")
 	plt.xlabel(varname)
 	plt.ylabel("#clusters")
 	plt.legend(loc="best")
 	if varname == "bx":
-		plt.xlim(1950, 2050)
+		df_full_bx = df_full.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
+		plt.axis([bx_low, bx_high, 0, 10*df_full_bx['bx'].max()])
+		#plt.xlim(bx_low, bx_high)
 	
 	if output == True:
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_rows" + str(nrows) + "_" + varname + "stacked.png", format="png", dpi=300)
@@ -55,7 +59,9 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	plt.xlabel(varname)
 	plt.ylabel("#clusters")
 	if varname == "bx":
-		plt.xlim(1950, 2050)
+		df_full_bx = df_full.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
+		plt.axis([bx_low, bx_high, 0, 1.05*df_full_bx['bx'].max()])
+		#plt.xlim(bx_low, bx_high)
 
 	if output == True:
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_rows" + str(nrows) + "_" + varname + ".png", format="png", dpi=300)
@@ -63,12 +69,14 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	else:
 		plt.show()
 
-	n_broken, bins_broken, patches_broken = plt.hist(df_broken[varname], bins=bins, color=colors2[index], ec="black", histtype="stepfilled")
+	n_broken, bins_broken, patches_broken = plt.hist(df_broken[varname], bins=bins_full, color=colors2[index], ec="black", histtype="stepfilled")
 	plt.title(varname + " cols=" + str(nfull) + " size=" + str(nbroken) + " rows=" + str(nrows))
 	plt.xlabel(varname)
 	plt.ylabel("#clusters")
 	if varname == "bx":
-		plt.xlim(1950, 2050)
+		df_broken_bx = df_broken.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
+		plt.axis([bx_low, bx_high, 0, 1.05*df_broken_bx['bx'].max()])
+		#plt.xlim(bx_low, bx_high)
 
 	if output == True:
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_rows" + str(nrows) + "_" + varname + ".png", format="png", dpi=300)
@@ -107,7 +115,7 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	plt.xlabel(varname)
 	plt.ylabel("prob" + splitmode)
 	if varname == "bx":
-		plt.xlim(1950, 2050)
+		plt.xlim(bx_low, bx_high)
 
 	if output == True:
 		plt.savefig(plot_dir + "prob_rows" + str(nrows) + "_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
@@ -130,7 +138,7 @@ def select_cols(tree, nfull, nbroken):
 	print(df_grid.head())
 
 	print("Dataframe query... Selecting cols==" + str(nfull) + " size==" + str(nbroken))
-	df_grid_full = df_grid.query('cols == ' + str(nfull) + '& tres < 5e7')
+	df_grid_full = df_grid.query('cols == ' + str(nfull))
 	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
 
 	return df_grid, df_grid_full, df_grid_broken

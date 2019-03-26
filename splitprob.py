@@ -39,9 +39,14 @@ varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 bins = [100, 100, 20, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 50]
 
 # Iteration over 5 variables and over all possible rows
-rows_max = df_grid['rows'].max()
-rows = range(1, rows_max + 1)
+#rows_max = df_grid_full['rows'].max()
+rows_max = 11
+rows = range(1, rows_max)
 for nrows in rows:
+	df_grid_full_rows = sp.select_rows(df_grid_full, nrows)
 	df_grid_broken_rows = sp.select_rows(df_grid_broken, nrows)
 	for i in range(len(varlist)):
-		sp.splitprob(df_grid_full, df_grid_broken_rows, bins=bins[i], varname=varlist[i], output=output, plot_dir=plot_dir)
+		if varlist[i] == "tres":
+			df_grid_full_rows = df_grid_full_rows.query('tres < 5e6')
+			df_grid_broken_rows = df_grid_broken_rows.query('tres < 5e6')
+		sp.splitprob(df_grid_full_rows, df_grid_broken_rows, bins=bins[i], varname=varlist[i], output=output, plot_dir=plot_dir)
