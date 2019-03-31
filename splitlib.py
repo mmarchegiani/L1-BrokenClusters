@@ -1,11 +1,12 @@
-import sys, os, pandas
+import sys, os
 import shutil
 import uproot
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 
 # Function to plot the histograms of #clusters(variable) where variable is called 'varname'
-def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir="./"):
+def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True, plot_dir="./"):
 	# To complete: evaluate nfull, nbroken directly from data instead of passing them as parameters
 	index_list = df_broken.index.values		# List of indices of selected data
 	nfull = df_full['cols'][index_list[0]]
@@ -13,6 +14,7 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	nrows = df_full['rows'][index_list[0]]
 	bx_low = 1980
 	bx_high = 2050
+	axislist = []
 
 	if nrows < 10:
 		rowname = "rows0" + str(nrows)
@@ -45,8 +47,9 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	plt.legend(loc="best")
 	if varname == "bx":
 		df_full_bx = df_full.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
-		plt.axis([bx_low, bx_high, 0, 10*df_full_bx['bx'].max()])
-		#plt.xlim(bx_low, bx_high)
+		axislist = [bx_low, bx_high, 0, 10*df_full_bx['bx'].max()]
+		plt.axis(axislist)
+
 	
 	if output == True:
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_rows" + str(nrows) + "_" + varname + "stacked.png", format="png", dpi=300)
@@ -60,8 +63,8 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	plt.ylabel("#clusters")
 	if varname == "bx":
 		df_full_bx = df_full.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
-		plt.axis([bx_low, bx_high, 0, 1.05*df_full_bx['bx'].max()])
-		#plt.xlim(bx_low, bx_high)
+		axislist = [bx_low, bx_high, 0, 1.05*df_full_bx['bx'].max()]
+		plt.axis(axislist)
 
 	if output == True:
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_rows" + str(nrows) + "_" + varname + ".png", format="png", dpi=300)
@@ -75,8 +78,8 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	plt.ylabel("#clusters")
 	if varname == "bx":
 		df_broken_bx = df_broken.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
-		plt.axis([bx_low, bx_high, 0, 1.05*df_broken_bx['bx'].max()])
-		#plt.xlim(bx_low, bx_high)
+		axislist = [bx_low, bx_high, 0, 1.05*df_broken_bx['bx'].max()]
+		plt.axis(axislist)
 
 	if output == True:
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_rows" + str(nrows) + "_" + varname + ".png", format="png", dpi=300)
@@ -102,20 +105,52 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 
 	#bins_broken = np.delete(bins_broken, -1)
 	#plt.scatter(bins_broken, prob, marker='.', color='blue', s=3)
+	#cov = np.cov(n_broken, n_full)[0][1]
 	sigma = []
+	sigma_uncorr = []
 	for i in range(len(prob)):
 		if ((n_broken[i] == 0) | (n_full[i] == 0)):
 			sigma.append(np.nan)
+			sigma_uncorr.append(np.nan)
 		else:
-				sigma.append(float(prob[i]*np.sqrt(1./n_broken[i] + 1./n_full[i])))		# We propagate the error on the ratio assuming poissonian uncertainties
+			#sigma.append(float(prob[i]*np.sqrt(1./n_broken[i] + 1./n_full[i] - 2*cov/(n_broken[i]*n_full[i]))))		# We propagate the error on the ratio assuming poissonian uncertainties
+			sigma.append(np.sqrt(prob[i]*(1 - prob[i])/n_full[i]))
+			sigma_uncorr.append(float(prob[i]*np.sqrt(1./n_broken[i] + 1./n_full[i])))		# We propagate the error on the ratio assuming poissonian uncertainties
+
+	# Calculation of axlimits only in the rows=1 case, otherwise axlimits passed as argument is keeped unchanged
+	# rows=2, 3, ... will have same axlimits as rows=1 if opportune axlimits is passed as argument
+	if nrows < 2:
+		prob_array = np.array(prob)
+		maxy = np.nanmax(prob_array)
+		imax = np.nanargmax(prob_array)
+		maxy = 1.05*(maxy + sigma[imax])
+
+		#axlimits = []
+		rangex = bins_full[-1] - bins_full[0]
+		gapx = 0.025*rangex
+		gapy = 0.025*maxy
+		if varname == "bx":
+			ilow = list(bins_full).index(bx_low)
+			ihigh = list(bins_full).index(bx_high)
+			prob_array_cut = np.take(prob_array, range(ilow, ihigh+1))	# cut the array between bx_low, bx_high
+			sigma_cut = np.take(sigma, range(ilow, ihigh+1))
+			maxy = np.nanmax(prob_array_cut)
+			imax = np.nanargmax(prob_array_cut)
+			maxy = 1.05*(maxy + sigma_cut[imax])
+			rangex = bx_high - bx_low
+			gapx = 0.025*rangex
+			gapy = 0.025*maxy
+			axlimits = [bins_full[ilow] - gapx, bins_full[ihigh] + gapx, -gapy, maxy]
+		else:
+			axlimits = [bins_full[0] - gapx, bins_full[-1] + gapx, -gapy, maxy]
 
 	plt.errorbar(bins_broken, prob, yerr=np.array(sigma), fmt='o', ecolor='r', c='r', label="data")
 
 	plt.title("prob splitting " + splitmode + "(rows=" + str(nrows) + ") vs " + varname)
 	plt.xlabel(varname)
 	plt.ylabel("prob" + splitmode)
-	if varname == "bx":
-		plt.xlim(bx_low, bx_high)
+	plt.grid(True)
+	plt.axis(axlimits)
 
 	if output == True:
 		plt.savefig(plot_dir + "prob_rows" + str(nrows) + "_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
@@ -123,7 +158,27 @@ def splitprob(df_full, df_broken, bins=100, varname="", output=True, plot_dir=".
 	else:
 		plt.show()
 
-	return
+	# Save .csv file with DataFrame of splitting probability graph
+
+	# plot_dir = ../ntuplesPixel/plots/Run300806/rows05/
+	
+	split_dirs = plot_dir.split("/")
+	split_dirs[-4] = "graphdata"
+	graph_dir = "/".join(split_dirs)
+
+	# graph_dir = ../ntuplesPixel/plots/Run300806/rows05/
+
+	if not os.path.exists(graph_dir):
+		os.makedirs(graph_dir)
+
+	d = {'n_broken' : n_broken, 'n_full' : n_full, varname : bins_broken, 'prob' : prob, 'sigma' : sigma, 'sigma_uncorr' : sigma_uncorr}
+	df_graph = pd.DataFrame(data=d)
+	filename = graph_dir + "prob_rows" + str(nrows) + "_" + varname + str(nfull) + str(nbroken) + ".csv"
+	print("Saving graph data as DataFrame in " + filename)
+	df_graph.to_csv(filename, index=False)
+	df_graph.head()
+
+	return axlimits
 
 # Function which reads the tree and store the data in 3 dataframes: complete data, cols=nfull data and cols=nfull size=nbroken data
 # The 3 dataframes are returned by the function

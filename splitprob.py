@@ -1,6 +1,7 @@
-import sys, os, pandas
+import sys, os
 import uproot
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 import splitlib as sp
 
@@ -37,6 +38,7 @@ print(str(tree.name) + " contains %d (%.1E) entries" % (len(tree), len(tree)))
 df_grid, df_grid_full, df_grid_broken = sp.select_cols(tree, nfull, nbroken)		# Function still to be tested
 varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 bins = [100, 100, 20, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 50]
+axlist = []
 
 # Iteration over 5 variables and over all possible rows
 #rows_max = df_grid_full['rows'].max()
@@ -49,4 +51,8 @@ for nrows in rows:
 		if varlist[i] == "tres":
 			df_grid_full_rows = df_grid_full_rows.query('tres < 5e6')
 			df_grid_broken_rows = df_grid_broken_rows.query('tres < 5e6')
-		sp.splitprob(df_grid_full_rows, df_grid_broken_rows, bins=bins[i], varname=varlist[i], output=output, plot_dir=plot_dir)
+		if nrows == 1:
+			plotlimits = sp.splitprob(df_grid_full_rows, df_grid_broken_rows, bins=bins[i], axlimits=[], varname=varlist[i], output=output, plot_dir=plot_dir)
+			axlist.append(plotlimits)	
+		else:
+			sp.splitprob(df_grid_full_rows, df_grid_broken_rows, bins=bins[i], axlimits=axlist[i], varname=varlist[i], output=output, plot_dir=plot_dir)
