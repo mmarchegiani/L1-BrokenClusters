@@ -40,7 +40,7 @@ for varname in varlist:
 				df_list.append(pd.read_csv(filename))
 				fileread = filename
 
-		if nrows < 2:
+		"""if nrows < 2:
 			prob_array = df_list[nrows]['prob'].values
 			sigma = df_list[nrows]['sigma'].values
 			maxy = np.nanmax(prob_array)
@@ -68,7 +68,7 @@ for varname in varlist:
 				axlimits = [bins_full[ilow] - gapx, bins_full[ihigh] + gapx, -gapy, maxy]
 			else:
 				axlimits = [bins_full[0] - gapx, bins_full[-1] + gapx, -gapy, maxy]
-
+"""
 		plt.errorbar(df_list[nrows][varname], df_list[nrows]['prob'], yerr=df_list[nrows]['sigma'], fmt='o', ecolor=colors[nrows], c=colors[nrows], label="rows="+str(nrows))
 
 		s = (((filread.split("/")[-1]).split(".")[0]).split("rows0" + str(nrows))[1]).replace(varname,'')
@@ -79,7 +79,7 @@ for varname in varlist:
 		plt.xlabel(varname)
 		plt.ylabel("prob" + splitmode)
 		plt.grid(True)
-		plt.axis(axlimits)
+		#plt.axis(axlimits)
 
 		if output == True:
 			plt.savefig(plot_dir + "prob_multirows_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)

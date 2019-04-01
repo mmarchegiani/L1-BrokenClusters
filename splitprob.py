@@ -42,7 +42,7 @@ axlist = []
 
 # Iteration over 5 variables and over all possible rows
 #rows_max = df_grid_full['rows'].max()
-rows_max = 11
+rows_max = df_grid_full['rows'].max()
 rows = range(1, rows_max)
 for nrows in rows:
 	df_grid_full_rows = sp.select_rows(df_grid_full, nrows)
