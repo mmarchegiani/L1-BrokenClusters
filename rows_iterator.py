@@ -81,9 +81,9 @@ for varname in varlist:
 		plt.grid(True)
 		#plt.axis(axlimits)
 
-		if output == True:
-			plt.savefig(plot_dir + "prob_multirows_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
-			plt.close()
-		else:
-			plt.show()
+	if output == True:
+		plt.savefig(plot_dir + "prob_multirows_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
+		plt.close()
+	else:
+		plt.show()
 
