@@ -27,6 +27,11 @@ if (sys.argv[4] == "-o") | (sys.argv[4] == "-output"):
 	output = True
 
 rows_max = 6
+if (int(nfull) == 4) & (int(nbroken) == 2):
+	rows_max = 5
+
+#print("rows_max = %d" % rows_max)
+
 axlimits = []
 varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 # Colors valid for rows_max=5
@@ -50,6 +55,8 @@ for varname in varlist:
 				#df_buffer = df_buffer.append(pd.read_csv(filename))
 				df_buffer = pd.read_csv(filename)
 				fileread = filename
+				#print(df_buffer.head())
+
 
 		#print(df_buffer)
 		plt.errorbar(df_buffer[varname], df_buffer['prob'], yerr=df_buffer['sigma'], fmt='.', ecolor=colors[nrows-1], c=colors[nrows-1], label="rows="+str(nrows))
