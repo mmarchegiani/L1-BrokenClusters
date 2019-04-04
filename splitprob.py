@@ -22,9 +22,13 @@ output = False
 if (sys.argv[4] == "-o") | (sys.argv[4] == "-output"):
 	output = True
 
+
 #filename = "/scratch/mmarcheg/lumi_data/Run300806.root"
 plot_dir = "../ntuplesPixel/plots/" + (filename.split("/")[-1]).split(".")[-2] + "/"
-#os.mkdir(plot_dir)
+
+if not os.path.exists(plot_dir):
+	os.makedirs(plot_dir)
+
 if output == True:
 	print("Plots will be saved in " + plot_dir)
 print("Opening %s" % filename)
@@ -42,11 +46,19 @@ axlist = []
 
 # Iteration over 5 variables and over all possible rows
 #rows_max = df_grid_full['rows'].max()
-rows_max = df_grid_full['rows'].max()
-rows = range(1, rows_max)
+rows_max = 8
+rows = range(1, rows_max+1)
 for nrows in rows:
+	df_grid_full_rows = pd.DataFrame()
+	df_grid_broken_rows = pd.DataFrame()
 	df_grid_full_rows = sp.select_rows(df_grid_full, nrows)
+	print("FULL")
 	df_grid_broken_rows = sp.select_rows(df_grid_broken, nrows)
+	print("BROKEN")
+	index_list = df_grid_broken_rows.index.values		# List of indices of selected data
+	if not index_list.size > 0:
+		print("Dataframe is empty")
+		break
 	for i in range(len(varlist)):
 		if varlist[i] == "tres":
 			df_grid_full_rows = df_grid_full_rows.query('tres < 5e6')

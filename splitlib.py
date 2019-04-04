@@ -9,6 +9,9 @@ import numpy as np
 def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True, plot_dir="./"):
 	# To complete: evaluate nfull, nbroken directly from data instead of passing them as parameters
 	index_list = df_broken.index.values		# List of indices of selected data
+	if not index_list.size > 0:
+		print("Dataframe is empty")
+		return
 	nfull = df_full['cols'][index_list[0]]
 	nbroken = df_full['size'][index_list[0]]
 	nrows = df_full['rows'][index_list[0]]
@@ -21,7 +24,12 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 	else:
 		rowname = "rows" + str(nrows)
 
-	main_dir = plot_dir[:]
+	main_dir = ""
+	if plot_dir.split("/")[-1] == "":
+		main_dir = plot_dir.replace(plot_dir.split("/")[-2] + "/", "")
+	else:
+		main_dir = plot_dir.replace(plot_dir.split("/")[-1], "")
+
 	plot_dir = plot_dir + rowname + "/"
 	plt.rcParams['agg.path.chunksize'] = 10000
 
@@ -57,10 +65,12 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 	else:
 		plt.show()
 	
-	n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled")
+	plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled")
+	#n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled")
 	plt.title(varname + " cols=" + str(nfull) + " rows=" + str(nrows))
 	plt.xlabel(varname)
 	plt.ylabel("#clusters")
+	#plt.text(0.05, 0.95, "#clusters=" + str(n_full.sum()), bbox=dict(facecolor='yellow', alpha=0.8), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
 	if varname == "bx":
 		df_full_bx = df_full.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
 		axislist = [bx_low, bx_high, 0, 1.05*df_full_bx['bx'].max()]
@@ -76,6 +86,7 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 	plt.title(varname + " cols=" + str(nfull) + " size=" + str(nbroken) + " rows=" + str(nrows))
 	plt.xlabel(varname)
 	plt.ylabel("#clusters")
+	#plt.text(0.05, 0.95, "#clusters=" + str(n_broken.sum()), bbox=dict(facecolor='yellow', alpha=0.8), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
 	if varname == "bx":
 		df_broken_bx = df_broken.query('bx > ' + str(bx_low) + ' & bx < ' + str(bx_high))
 		axislist = [bx_low, bx_high, 0, 1.05*df_broken_bx['bx'].max()]
@@ -144,7 +155,7 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 		else:
 			axlimits = [bins_full[0] - gapx, bins_full[-1] + gapx, -gapy, maxy]
 
-	plt.errorbar(bins_broken, prob, yerr=np.array(sigma), fmt='o', ecolor='r', c='r', label="data")
+	plt.errorbar(bins_broken, prob, yerr=np.array(sigma), fmt='.', ecolor='r', c='r', label="data")
 
 	plt.title("prob splitting " + splitmode + "(rows=" + str(nrows) + ") vs " + varname)
 	plt.xlabel(varname)
@@ -188,18 +199,18 @@ def select_cols(tree, nfull, nbroken):
 		entrystop_ = 53605236
 		print("Dataframe truncated to %.1E events" % entrystop_)
 	else:
-		print("Dataframe keeped with all the events")
-	df_grid = tree.pandas.df([b'size', b'cols', b'rows', b'x', b'y', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
-	print(df_grid.head())
+		print("Dataframe keeped with all %d events" % len(tree))
+	df_grid = tree.pandas.df([b'size', b'cols', b'rows', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
+	print("entries = %d" % df_grid.shape[0])
 
-	print("Dataframe query... Selecting cols==" + str(nfull) + " size==" + str(nbroken))
+	print("Selecting cols==" + str(nfull) + " size==" + str(nbroken))
 	df_grid_full = df_grid.query('cols == ' + str(nfull))
 	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
 
 	return df_grid, df_grid_full, df_grid_broken
 
 def select_rows(df, nrows):
-	print("Dataframe query... Selecting rows==" + str(nrows))
+	print("Selecting rows==" + str(nrows), end="\t")
 	df_grid_rows = df.query('rows == ' + str(nrows))
-	df_grid_rows.head()
+	print("entries = %d" % df_grid_rows.shape[0], end="\t")
 	return df_grid_rows
