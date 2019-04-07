@@ -193,18 +193,22 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 
 # Function which reads the tree and store the data in 3 dataframes: complete data, cols=nfull data and cols=nfull size=nbroken data
 # The 3 dataframes are returned by the function
-def select_cols(tree, nfull, nbroken):
+def select_cols(tree, nfull, nbroken, selection=False):
 	entrystop_ = None
 	if len(tree) > 53605236:		# HARDCODED
 		entrystop_ = 53605236
 		print("Dataframe truncated to %.1E events" % entrystop_)
 	else:
 		print("Dataframe keeped with all %d events" % len(tree))
-	df_grid = tree.pandas.df([b'size', b'cols', b'rows', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
+	df_grid = tree.pandas.df([b'pos_x', b'pos_y', b'size', b'cols', b'rows', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
 	print("entries = %d" % df_grid.shape[0])
 
 	print("Selecting cols==" + str(nfull) + " size==" + str(nbroken))
 	df_grid_full = df_grid.query('cols == ' + str(nfull))
+
+	if selection == True:
+		df_grid_full = df_grid_full.query('((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)')
+	
 	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
 
 	return df_grid, df_grid_full, df_grid_broken

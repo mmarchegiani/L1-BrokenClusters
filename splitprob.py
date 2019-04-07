@@ -14,6 +14,9 @@ if(len(sys.argv) < 4):
 if(len(sys.argv) < 5):
 	sys.argv.append("-nooutput")
 
+if(len(sys.argv) < 6)
+	sys.argv.append("-noselection")
+
 filename = sys.argv[1]
 nfull = sys.argv[2]
 nbroken = sys.argv[3]
@@ -21,6 +24,10 @@ nbroken = sys.argv[3]
 output = False
 if (sys.argv[4] == "-o") | (sys.argv[4] == "-output"):
 	output = True
+
+selection = False
+if (sys.argv[5] == "-s") | (sys.argv[5] == "-selection"):
+	selection = True
 
 
 #filename = "/scratch/mmarcheg/lumi_data/Run300806.root"
