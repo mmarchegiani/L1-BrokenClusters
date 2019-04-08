@@ -7,7 +7,7 @@ import numpy as np
 #import splitlib as sp
 
 if(len(sys.argv) < 2):
-	sys.exit("'graphdata' path required as first argument.\t(e.g. '~/ntuplesPixel/graphdata/Run300806')")
+	sys.exit("'graphdata' path required as first argument.\t(e.g. '~/ntuplesPixel/graphdata/Run03/Run300806')")
 
 if(len(sys.argv) < 4):
 	sys.exit("'nfull' and 'nbroken' required as second, third arguments.")
