@@ -30,6 +30,9 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 	else:
 		main_dir = plot_dir.replace(plot_dir.split("/")[-1], "")
 
+	path_list = main_dir.split("/")
+	path_list.pop(-2)
+	main_dir = "/".join(path_list)
 	plot_dir = plot_dir + rowname + "/"
 	plt.rcParams['agg.path.chunksize'] = 10000
 
@@ -203,12 +206,14 @@ def select_cols(tree, nfull, nbroken, selection=False):
 	df_grid = tree.pandas.df([b'pos_x', b'pos_y', b'size', b'cols', b'rows', b'global_eta', b'global_phi', b'instaLumi', b'bx', b'tres'], entrystop=entrystop_)
 	print("entries = %d" % df_grid.shape[0])
 
-	print("Selecting cols==" + str(nfull) + " size==" + str(nbroken))
+	print("Selecting cols==" + str(nfull))
 	df_grid_full = df_grid.query('cols == ' + str(nfull))
 
 	if selection == True:
-		df_grid_full = df_grid_full.query('((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)')
+		print("Selecting pixels")
+		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80))')
 	
+	print("Selecting size==" + str(nbroken))
 	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
 
 	return df_grid, df_grid_full, df_grid_broken

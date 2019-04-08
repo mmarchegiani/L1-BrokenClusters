@@ -5,17 +5,20 @@ import pandas as pd
 import numpy as np
 import splitlib as sp
 
-if(len(sys.argv) < 2):
+if (len(sys.argv) < 2):
 	sys.exit("File name required as first argument.")
 
-if(len(sys.argv) < 4):
+if (len(sys.argv) < 4):
 	sys.exit("'nfull' and 'nbroken' required as second, third arguments.")
 
-if(len(sys.argv) < 5):
+if (len(sys.argv) < 5):
 	sys.argv.append("-nooutput")
 
-if(len(sys.argv) < 6)
+if (len(sys.argv) < 6):
 	sys.argv.append("-noselection")
+
+if (len(sys.argv) < 7):
+	sys.argv.append("test")
 
 filename = sys.argv[1]
 nfull = sys.argv[2]
@@ -29,12 +32,20 @@ selection = False
 if (sys.argv[5] == "-s") | (sys.argv[5] == "-selection"):
 	selection = True
 
+run = sys.argv[6]
+if run[-1] != "/":
+	run = run + "/"
 
 #filename = "/scratch/mmarcheg/lumi_data/Run300806.root"
-plot_dir = "../ntuplesPixel/plots/" + (filename.split("/")[-1]).split(".")[-2] + "/"
+plot_dir = "../ntuplesPixel/plots/" + run + (filename.split("/")[-1]).split(".")[-2] + "/"
 
 if not os.path.exists(plot_dir):
 	os.makedirs(plot_dir)
+#else:
+#	print(plot_dir + " already exists in memory. Overwrite it? (y/n)")
+#	line = sys.stdin.readline()
+#	if not ((line == "y\n") | (line == "y") | (line == "yes\n") | (line == "yes")):
+#		sys.exit("Aborting the process. Exit.")
 
 if output == True:
 	print("Plots will be saved in " + plot_dir)
@@ -46,7 +57,7 @@ tree = file[b'a/tree;1']
 #tree.keys()
 print(str(tree.name) + " contains %d (%.1E) entries" % (len(tree), len(tree)))
 
-df_grid, df_grid_full, df_grid_broken = sp.select_cols(tree, nfull, nbroken)		# Function still to be tested
+df_grid, df_grid_full, df_grid_broken = sp.select_cols(tree, nfull, nbroken, selection)		# Function still to be tested
 varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 bins = [100, 100, 20, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 50]
 axlist = []
