@@ -62,15 +62,17 @@ for varname in varlist:
 			#s = (((filread.split("/")[-1]).split(".")[0]).split("rows0" + str(nrows))[1]).replace(varname,'')
 			#nfull = s[0]
 			#nbroken = s[1]
-			splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
-			plt.title("prob splitting " + splitmode + " " + varname)
-			plt.xlabel(varname)
-			plt.ylabel("prob" + splitmode)
-			plt.grid(True)
-			plt.legend(loc="upper left")
-			if varname == "bx":
-				plt.axis([1000, 1100, 0, 1.0])
-			#plt.axis(axlimits)
+		splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
+		plt.title("prob splitting (rows=" + str(nrows) + ") " + varname)
+		plt.xlabel(varname)
+		plt.ylabel("prob splitting")
+		plt.grid(True)
+		plt.legend(loc="upper left")
+		if varname == "bx":
+			plt.axis([1000, 1100, 0, 1.0])
+		if varname == "global_eta":
+			plt.legend(loc="upper center")
+		#plt.axis(axlimits)
 
 		if output == True:
 			sub_dir = sub_dir.replace("graphdata", "plots")
