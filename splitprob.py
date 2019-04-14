@@ -74,15 +74,28 @@ tree = file[b'a/tree;1']
 #tree.keys()
 print(str(tree.name) + " contains %d (%.1E) entries" % (len(tree), len(tree)))
 
-df_grid, df_grid_full, df_grid_broken = sp.select_cols(tree, nfull, nbroken, selection, ladder)
-varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
-axlist = []
+df_grid, df_grid_full, df_grid_broken = sp.select_cols(tree, nfull, nbroken, selection)
+
+nbins_lumi = 0
 lumi_bins = []
 if lumibinned == True:
 	nbins_lumi = 5
 	lumi_n, lumi_bins, patches = plt.hist(df_grid_full['instaLumi'], bins=nbins_lumi)
 	plt.close()
-	bins = [100, 100, 4, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 50]
+
+luminame = []
+for i in range(nbins_lumi):
+	luminame.append(str(int(0.5*(lumi_bins[i+1] + lumi_bins[i]))))
+
+# Ladder selection after choosing the binning: in this way either in case "inner" or "outer", we'll have same binning
+df_grid_full = sp.select_ladder(df_grid_full, ladder)
+df_grid_broken = sp.select_ladder(df_grid_broken, ladder)
+varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
+axlist = []
+if lumibinned == True:
+	nbins_eta = 16
+	#bins = [100, 100, 4, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 50]
+	bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full['bx'].max() - df_grid_full['bx'].min(), 50]
 	for j in range(len(lumi_bins) - 1):
 		df_grid_full_lumi = pd.DataFrame()
 		df_grid_broken_lumi = pd.DataFrame()
@@ -96,7 +109,7 @@ if lumibinned == True:
 			print("No operations will be performed. Continue.")
 			continue
 		for i in range(len(varlist)):
-			sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[i], axlimits=[], varname=varlist[i], output=output, plot_dir=plot_dir)
+			sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[i], axlimits=[], varname=varlist[i], luminame=luminame[j], output=output, plot_dir=plot_dir)
 else:
 # Iteration over 5 variables and over all possible rows
 #rows_max = df_grid_full['rows'].max()

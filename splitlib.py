@@ -201,7 +201,7 @@ def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True
 	return axlimits
 
 # Function to plot the histograms of #clusters(variable) where variable is called 'varname' when instaLumi is binned
-def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", output=True, plot_dir="./"):
+def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminame="xxx", output=True, plot_dir="./"):
 	index_list = df_broken.index.values		# List of indices of selected data
 	if not index_list.size > 0:
 		print("Dataframe is empty")
@@ -217,7 +217,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", output=
 	else:
 		laddername = "outer"
 
-	luminame = "lumi" + str(int(mean_lumi))
+	luminame = "lumi" + luminame
 	lumitrunc = str(int(mean_lumi)) + "." + str(mean_lumi - int(mean_lumi))[2:5]
 
 	main_dir = ""
@@ -310,22 +310,19 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", output=
 	prob = []
 	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
 
-	bin_size = bins_broken[1] - bins_broken[0]
-	bins_broken = np.linspace(start=bins_broken[0] + 0.5*bin_size, stop=bins_broken[-2] + 0.5*bin_size, num=len(bins_broken) - 1, endpoint=True)
+	x_coord_plot = bins_broken[:-1]
 
-	#n = len(n_full)
-	#mylist = range(n)
-	#for i in mylist:
-	for item in n_full:
-		if item == 0:
+	# This cycle compute the x-coordinate we will give as an input to plt.errorbar(). It allows for different size bins.
+	for (i, val) in enumerate(x_coord_plot):
+		bin_size = bins_broken[i+1] - bins_broken[i]
+		x_coord_plot[i] = x_coord_plot[i] + 0.5*bin_size
+
+	for (i, val) in enumerate(n_full):
+		if val == 0:
 			prob.append(np.nan)
 		else:
-			i = list(n_full).index(item)
-			prob.append(float(n_broken[i])/float(item))
+			prob.append(float(n_broken[i])/float(val))
 
-	#bins_broken = np.delete(bins_broken, -1)
-	#plt.scatter(bins_broken, prob, marker='.', color='blue', s=3)
-	#cov = np.cov(n_broken, n_full)[0][1]
 	sigma = []
 	for i in range(len(prob)):
 		if (prob[i] == np.nan):
@@ -340,14 +337,18 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", output=
 				else:
 					sigma.append(np.sqrt(prob[i]*(1 - prob[i])/n_full[i]))
 
-	plt.errorbar(bins_broken, prob, yerr=np.array(sigma), fmt='.', ecolor='r', c='r', label="data")
+	plt.errorbar(x_coord_plot, prob, yerr=np.array(sigma), fmt='.', ecolor='r', c='r', label="data")
 
 	plt.title("prob splitting " + splitmode + "(meanLumi=" + lumitrunc + ") vs " + varname)
 	plt.xlabel(varname)
 	plt.ylabel("prob" + splitmode)
 	plt.grid(True)
 	plt.axis(axlimits)
-
+	if varname == "global_eta":
+		plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
+		plt.axvline(+1, 0., 1.05, linestyle='--')
+		plt.legend(loc="upper right")
+		plt.text(-3.0, 0.95, laddername + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 	#if varname == "bx":
 	#	plt.axis([bx_low, bx_high, 0., 1.05])
 
@@ -370,9 +371,9 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", output=
 	if not os.path.exists(graph_dir):
 		os.makedirs(graph_dir)
 
-	d = {'meanLumi' : (mean_lumi*np.ones_like(n_broken)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : bins_broken, 'prob' : prob, 'sigma' : sigma}
+	d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
 	df_graph = pd.DataFrame(data=d)
-	filename = graph_dir + "prob_" + luminame + "_" + varname + str(nfull) + str(nbroken) + ".csv"
+	filename = graph_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".csv"
 	print("Saving graph data as DataFrame in " + filename)
 	df_graph.to_csv(filename, index=False)
 	df_graph.head()
@@ -381,7 +382,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", output=
 
 # Function which reads the tree and store the data in 3 dataframes: complete data, cols=nfull data and cols=nfull size=nbroken data
 # The 3 dataframes are returned by the function
-def select_cols(tree, nfull, nbroken, selection=False, ladder=None):
+def select_cols(tree, nfull, nbroken, selection=False):
 	entrystop_ = None
 	if len(tree) > 53605236:		# HARDCODED
 		entrystop_ = 53605236
@@ -394,14 +395,14 @@ def select_cols(tree, nfull, nbroken, selection=False, ladder=None):
 	print("Selecting cols==" + str(nfull))
 	df_grid_full = df_grid.query('(cols == ' + str(nfull) + ') & (tres > 2e5) & (tres < 5e6)')
 
-	if (selection == True) & (ladder == None):
+	if selection == True:
 		print("Selecting pixels")
 		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80))')
-	else:
-		if ladder == "inner":
-			df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80)) & (((ladder % 2 == 0) & (ladder > 0)) | ((ladder % 2 != 0) & (ladder < 0)))')
-		if ladder == "outer":
-			df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80)) & (((ladder % 2 == 0) & (ladder < 0)) | ((ladder % 2 != 0) & (ladder > 0)))')
+	#else:
+	#	if ladder == "inner":
+	#		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80)) & (((ladder % 2 == 0) & (ladder > 0)) | ((ladder % 2 != 0) & (ladder < 0)))')
+	#	if ladder == "outer":
+	#		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80)) & (((ladder % 2 == 0) & (ladder < 0)) | ((ladder % 2 != 0) & (ladder > 0)))')
 	
 	print("Selecting size==" + str(nbroken))
 	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
@@ -420,3 +421,50 @@ def select_lumi(df, lumilimits):
 	df_grid_lumi = df.query('(rows == 1) & (instaLumi > ' + str(lumilimits[0]) + ') & (instaLumi < ' + str(lumilimits[1]) + ')')
 	print("entries = %d" % df_grid_lumi.shape[0], end="\t")
 	return df_grid_lumi
+
+def select_ladder(df, ladder):
+	df_grid_ladder = pd.DataFrame()
+	print("Selecting ladder = " + ladder, end="\t")
+	if ladder == "inner":
+		df_grid_ladder = df.query('((ladder % 2 == 0) & (ladder > 0)) | ((ladder % 2 != 0) & (ladder < 0))')
+	if ladder == "outer":
+		df_grid_ladder = df.query('((ladder % 2 == 0) & (ladder < 0)) | ((ladder % 2 != 0) & (ladder > 0))')
+	print("entries = %d" % df_grid_ladder.shape[0], end="\t")
+	return df_grid_ladder
+
+def select_global_eta(df, threshold):
+	df_grid_global_eta = pd.DataFrame()
+	print("Selecting global_eta >" + str(threshold), end="\t")
+	df_grid_global_eta = df.query('global_eta > ' + str(threshold))
+	print("entries = %d" % df_grid_global_eta.shape[0], end="\t")
+	return df_grid_global_eta
+
+def cols_distrib(df, threshold, lumi_bins, ladder, output=True, plot_dir="./"):
+	print("Plotting cols distribution...")
+	colors = []
+	luminame = []
+	if len(lumi_bins) == 6:
+		colors = ["red", "orange", "cyan", "green", "blue"]
+	df_cols_distrib = select_global_eta(df, threshold)
+	for i in range(len(lumi_bins) - 1):
+		df_cols_distrib_lumi = select_lumi(df_cols_distrib, [lumi_bins[i], lumi_bins[i+1]])
+		mean_lumi = df_cols_distrib_lumi['instaLumi'].mean()
+		print("mean_lumi = %f" % mean_lumi)
+		luminame.append(str(int(mean_lumi)))
+
+		plt.hist(df_cols_distrib_lumi['cols'], bins=df_cols_distrib_lumi['cols'].max(), color=colors[i], ec=colors[i], histtype="step", label="lumi = " + luminame[i])
+	
+	plt.title("cols distribution")
+	plt.xlabel("cols")
+	plt.ylabel("#clusters")
+	plt.legend(loc="upper right")
+	plt.xlim(0, 20)
+
+	if output == True:
+		plt.savefig(plot_dir + "cols_distrib_" + ladder + ".png", format="png", dpi=300)
+		plt.close()
+	else:
+		plt.show()
+
+	return
+
