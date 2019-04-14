@@ -89,7 +89,9 @@ for i in range(nbins_lumi):
 
 # Ladder selection after choosing the binning: in this way either in case "inner" or "outer", we'll have same binning
 df_grid_full = sp.select_ladder(df_grid_full, ladder)
+print("FULL")
 df_grid_broken = sp.select_ladder(df_grid_broken, ladder)
+print("BROKEN")
 varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 axlist = []
 if lumibinned == True:

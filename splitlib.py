@@ -452,7 +452,7 @@ def cols_distrib(df, threshold, lumi_bins, ladder, output=True, plot_dir="./"):
 		print("mean_lumi = %f" % mean_lumi)
 		luminame.append(str(int(mean_lumi)))
 
-		plt.hist(df_cols_distrib_lumi['cols'], bins=df_cols_distrib_lumi['cols'].max(), color=colors[i], ec=colors[i], histtype="step", label="lumi = " + luminame[i])
+		plt.hist(df_cols_distrib_lumi['cols'], bins=df_cols_distrib_lumi['cols'].max(), normed=True, log=True,color=colors[i], ec=colors[i], histtype="step", label="lumi = " + luminame[i])
 	
 	plt.title("cols distribution")
 	plt.xlabel("cols")
