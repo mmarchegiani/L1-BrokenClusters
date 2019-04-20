@@ -349,6 +349,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		plt.axvline(+1, 0., 1.05, linestyle='--')
 		plt.legend(loc="upper right")
 		plt.text(-3.0, 0.95, laddername + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
 	#if varname == "bx":
 	#	plt.axis([bx_low, bx_high, 0., 1.05])
 
@@ -419,7 +420,8 @@ def select_lumi(df, lumilimits):
 	print("Selecting instaLumi in ", end="")
 	print(lumilimits)
 	df_grid_lumi = df.query('(rows == 1) & (instaLumi > ' + str(lumilimits[0]) + ') & (instaLumi < ' + str(lumilimits[1]) + ')')
-	print("entries = %d" % df_grid_lumi.shape[0], end="\t")
+	#print("entries = %d" % df_grid_lumi.shape[0], end="\t")
+	print("entries = %d" % df_grid_lumi.shape[0])
 	return df_grid_lumi
 
 def select_ladder(df, ladder):
@@ -443,20 +445,52 @@ def cols_distrib(df, threshold, lumi_bins, ladder, output=True, plot_dir="./"):
 	print("Plotting cols distribution...")
 	colors = []
 	luminame = []
+	meanlist = []
 	if len(lumi_bins) == 6:
 		colors = ["red", "orange", "cyan", "green", "blue"]
 	df_cols_distrib = select_global_eta(df, threshold)
 	for i in range(len(lumi_bins) - 1):
 		df_cols_distrib_lumi = select_lumi(df_cols_distrib, [lumi_bins[i], lumi_bins[i+1]])
+		index_list = df_cols_distrib_lumi.index.values		# List of indices of selected data
+		if not df_cols_distrib_lumi.shape[0] > 0:
+			print("Dataframe is empty")
+			meanlist.append(np.nan)
+			luminame.append("")
+			continue
+
 		mean_lumi = df_cols_distrib_lumi['instaLumi'].mean()
+		meanlist.append(mean_lumi)
 		print("mean_lumi = %f" % mean_lumi)
 		luminame.append(str(int(mean_lumi)))
 
-		plt.hist(df_cols_distrib_lumi['cols'], bins=df_cols_distrib_lumi['cols'].max(), normed=True, log=True,color=colors[i], ec=colors[i], histtype="step", label="lumi = " + luminame[i])
+		plt.hist(df_cols_distrib_lumi['cols'], bins=df_cols_distrib_lumi['cols'].max(), normed=True, log=True, color=colors[i], ec=colors[i], histtype="step", label="lumi = " + luminame[i])
 	
-	plt.title("cols distribution")
+	plt.title("cols distribution (normed)")
 	plt.xlabel("cols")
-	plt.ylabel("#clusters")
+	plt.ylabel("frequency (normed)")
+	plt.legend(loc="upper right")
+	plt.xlim(0, 20)
+
+	if output == True:
+		plt.savefig(plot_dir + "cols_distrib_log_" + ladder + ".png", format="png", dpi=300)
+		plt.close()
+	else:
+		plt.show()
+
+	for i in range(len(lumi_bins) - 1):
+		df_cols_distrib_lumi = select_lumi(df_cols_distrib, [lumi_bins[i], lumi_bins[i+1]])
+		if not df_cols_distrib_lumi.shape[0] > 0:
+			print("Dataframe is empty")
+			meanlist.append(np.nan)
+			luminame.append("")
+			continue
+
+		print("mean_lumi = %f" % meanlist[i])
+		plt.hist(df_cols_distrib_lumi['cols'], bins=df_cols_distrib_lumi['cols'].max(), normed=True, color=colors[i], ec=colors[i], histtype="step", label="lumi = " + luminame[i])
+	
+	plt.title("cols distribution (normed)")
+	plt.xlabel("cols")
+	plt.ylabel("frequency (normed)")
 	plt.legend(loc="upper right")
 	plt.xlim(0, 20)
 
