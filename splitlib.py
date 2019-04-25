@@ -205,7 +205,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	index_list = df_broken.index.values		# List of indices of selected data
 	if not index_list.size > 0:
 		print("Dataframe is empty")
-		return
+		return None, np.array([0]*(len(bins) - 1)), np.array([0]*(len(bins) - 1))
 	nfull = df_full['cols'][index_list[0]]
 	nbroken = df_full['size'][index_list[0]]
 	nrows = df_full['rows'][index_list[0]]
@@ -272,7 +272,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_" + luminame + "_" + laddername + "_" + varname + "stacked.png", format="png", dpi=300)
 		plt.close()
 	else:
-		plt.show()
+		plt.close()
 	
 	plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled")
 	#n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled")
@@ -289,7 +289,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_" + luminame + "_" + laddername + "_" + varname + ".png", format="png", dpi=300)
 		plt.close()
 	else:
-		plt.show()
+		plt.close()
 
 	n_broken, bins_broken, patches_broken = plt.hist(df_broken[varname], bins=bins_full, color=colors2[index], ec="black", histtype="stepfilled")
 	plt.title(varname + " cols=" + str(nfull) + " size=" + str(nbroken) + " meanLumi=" + lumitrunc)
@@ -305,7 +305,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		plt.savefig(plot_dir + "cols" + str(nfull) + "_size" + str(nbroken) + "_" + luminame + "_" + laddername + "_" + varname + ".png", format="png", dpi=300)
 		plt.close()
 	else:
-		plt.show()
+		plt.close()
 
 	prob = []
 	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
@@ -357,7 +357,7 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		plt.savefig(plot_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
 		plt.close()
 	else:
-		plt.show()
+		plt.close()
 
 	# Save .csv file with DataFrame of splitting probability graph
 
@@ -379,7 +379,110 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	df_graph.to_csv(filename, index=False)
 	df_graph.head()
 
-	return axlimits
+	return axlimits, n_broken, n_full
+
+def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output=True, plot_dir="./"):
+	if len(n_full) != len(n_broken):
+		print("'n_full' and 'n_broken' have different length. Aborting.")
+		return
+
+	main_dir = ""
+	if plot_dir.split("/")[-1] == "":
+		main_dir = plot_dir.replace(plot_dir.split("/")[-2] + "/", "")
+	else:
+		main_dir = plot_dir.replace(plot_dir.split("/")[-1], "")
+
+	path_list = main_dir.split("/")
+	path_list.pop(-2)
+	main_dir = "/".join(path_list)
+	luminame = "lumi" + luminame
+	plot_dir = plot_dir + luminame + "/"
+	plt.rcParams['agg.path.chunksize'] = 10000
+
+	if not os.path.exists(plot_dir):
+		os.makedirs(plot_dir)
+
+	shutil.copyfile(main_dir + "index.php", plot_dir + "index.php")
+
+	varname = "global_eta"
+	nbins_eta = 16
+	bins = np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist()
+	axlimits = [-3.2, 3.2, 0., 1.05]
+	prob = []
+	splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
+	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
+
+	x_coord_plot = bins[:-1]
+
+	# This cycle compute the x-coordinate we will give as an input to plt.errorbar(). It allows for different size bins.
+	for (i, val) in enumerate(x_coord_plot):
+		bin_size = bins[i+1] - bins[i]
+		x_coord_plot[i] = x_coord_plot[i] + 0.5*bin_size
+
+	for (i, val) in enumerate(n_full):
+		if val == 0:
+			prob.append(np.nan)
+		else:
+			prob.append(float(n_broken[i])/float(val))
+
+	sigma = []
+	for i in range(len(prob)):
+		if (prob[i] == np.nan):
+			sigma.append(np.nan)
+		else:
+			#sigma.append(float(prob[i]*np.sqrt(1./n_broken[i] + 1./n_full[i] - 2*cov/(n_broken[i]*n_full[i]))))		# We propagate the error on the ratio assuming poissonian uncertainties
+			if n_broken[i] == n_full[i]:
+				sigma.append(np.sqrt( float(n_full[i] + 1)/float(n_full[i] + 3) - (float(n_full[i] + 1)/float(n_full[i] + 2))**2 ) )		# Correction for efficiency error when n_broken[i]=n_full[i]
+			else:
+				if ( (n_broken[i] == 0) & (n_full[i] != 0) ):
+					sigma.append(np.sqrt(1./12.))			# Correction for efficiency error when n_broken[i]=0
+				else:
+					sigma.append(np.sqrt(prob[i]*(1 - prob[i])/n_full[i]))
+
+	plt.errorbar(x_coord_plot, prob, yerr=np.array(sigma), fmt='.', ecolor='r', c='r', label="data")
+
+	plt.title("prob splitting " + splitmode + "(meanLumi=" + luminame + ") vs " + varname)
+	plt.xlabel(varname)
+	plt.ylabel("prob" + splitmode)
+	plt.grid(True)
+	plt.axis(axlimits)
+	if varname == "global_eta":
+		plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
+		plt.axvline(+1, 0., 1.05, linestyle='--')
+		plt.legend(loc="upper right")
+		plt.text(-3.0, 0.95, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
+	#if varname == "bx":
+	#	plt.axis([bx_low, bx_high, 0., 1.05])
+
+	if output == True:
+		plt.savefig(plot_dir + "prob_" + luminame + "_" + ladder + "_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
+		plt.close()
+	else:
+		plt.show()
+
+	return
+
+	# Save .csv file with DataFrame of splitting probability graph
+
+	# plot_dir = ../ntuplesPixel/plots/Run300806/rows05/
+	
+	#split_dirs = plot_dir.split("/")
+	#split_dirs[-4] = "graphdata"
+	graph_dir = plot_dir.replace("plots", "graphdata")
+
+	# graph_dir = ../ntuplesPixel/plots/Run300806/rows05/
+
+	if not os.path.exists(graph_dir):
+		os.makedirs(graph_dir)
+
+	d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
+	df_graph = pd.DataFrame(data=d)
+	filename = graph_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".csv"
+	print("Saving graph data as DataFrame in " + filename)
+	df_graph.to_csv(filename, index=False)
+	df_graph.head()
+
 
 # Function which reads the tree and store the data in 3 dataframes: complete data, cols=nfull data and cols=nfull size=nbroken data
 # The 3 dataframes are returned by the function
@@ -407,6 +510,27 @@ def select_cols(tree, nfull, nbroken, selection=False):
 	
 	print("Selecting size==" + str(nbroken))
 	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
+
+	return df_grid, df_grid_full, df_grid_broken
+
+def select_cols_df(df_grid, nfull, nbroken, selection=False):
+
+	print("Selecting cols==" + str(nfull))
+	df_grid_full = df_grid.query('(cols == ' + str(nfull) + ') & (tres > 2e5) & (tres < 5e6)')
+
+	if selection == True:
+		print("Selecting pixels")
+		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80))')
+	#else:
+	#	if ladder == "inner":
+	#		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80)) & (((ladder % 2 == 0) & (ladder > 0)) | ((ladder % 2 != 0) & (ladder < 0)))')
+	#	if ladder == "outer":
+	#		df_grid_full = df_grid_full.query('(((pos_x % 52) > 0) & ((pos_x % 52) < 43 ) & (((pos_x % 52) + cols) < 43)) & (((pos_y < 79) & ((pos_y + rows - 1) < 79)) | (pos_y > 80)) & (((ladder % 2 == 0) & (ladder < 0)) | ((ladder % 2 != 0) & (ladder > 0)))')
+	
+	print("Selecting size==" + str(nbroken))
+	df_grid_broken = df_grid_full.query('size == ' + str(nbroken))
+
+	print("entries = %d" % df_grid.shape[0])
 
 	return df_grid, df_grid_full, df_grid_broken
 
