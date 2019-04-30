@@ -90,7 +90,7 @@ luminame = []
 for (i, l) in enumerate(lumi_bins[:-1]):
 	luminame.append(str(int(0.5*(lumi_bins[i+1] + lumi_bins[i]))))
 
-for nfull in [7, 6, 5, 4]:
+for nfull in [10, 9, 8, 7, 6, 5, 4]:
 	nbroken = nfull - 2
 	df_full_list = []
 	df_broken_list = []
@@ -133,7 +133,7 @@ for nfull in [7, 6, 5, 4]:
 				#	print("No operations will be performed. Continue.")
 				#	continue
 				# Operation pursued only for var = global_eta
-				axlimits, n_broken_lumi, n_full_lumi = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[0], axlimits=[], varname=varlist[0], luminame=luminame[j], output=True, plot_dir=plot_dir)
+				axlimits, n_broken_lumi, n_full_lumi = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[0], axlimits=[], varname=varlist[0], luminame=luminame[j], output=False, plot_dir=plot_dir)
 				#if (n_broken_lumi != []) & (n_full_lumi != []):
 				n_broken_lumi_list.append(n_broken_lumi)
 				n_full_lumi_list.append(n_full_lumi)
@@ -151,5 +151,6 @@ for nfull in [7, 6, 5, 4]:
 					n_full_sum_list[j] = list_sum(n_full_sum_list[j], n_full_lumi_list[j])
 
 		for (j, item) in enumerate(n_broken_sum_list):
-			if n_broken_sum_list != [0]*(len(bins[0]) - 1):
+			print("lumi" + luminame[j])
+			if n_broken_sum_list[j] != [0]*(len(bins[0]) - 1):
 				sp.splitprob_n(n_full_sum_list[j], n_broken_sum_list[j], nfull, nbroken, ladder, luminame=luminame[j], output=True, plot_dir=plot_dir)

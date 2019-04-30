@@ -372,12 +372,13 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	if not os.path.exists(graph_dir):
 		os.makedirs(graph_dir)
 
-	d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
-	df_graph = pd.DataFrame(data=d)
-	filename = graph_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".csv"
-	print("Saving graph data as DataFrame in " + filename)
-	df_graph.to_csv(filename, index=False)
-	df_graph.head()
+	if output == True:
+		d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
+		df_graph = pd.DataFrame(data=d)
+		filename = graph_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".csv"
+		print("Saving graph data as DataFrame in " + filename)
+		df_graph.to_csv(filename, index=False)
+		print(df_graph.head())
 
 	return axlimits, n_broken, n_full
 
@@ -395,6 +396,7 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output
 	path_list = main_dir.split("/")
 	path_list.pop(-2)
 	main_dir = "/".join(path_list)
+	mean_lumi = float(luminame)
 	luminame = "lumi" + luminame
 	plot_dir = plot_dir + luminame + "/"
 	plt.rcParams['agg.path.chunksize'] = 10000
@@ -450,8 +452,9 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output
 		plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
 		plt.axvline(+1, 0., 1.05, linestyle='--')
 		plt.legend(loc="upper right")
-		plt.text(-3.0, 0.95, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.95, "2017 combined data", bbox=dict(facecolor='yellow', alpha=0.75))
+		#plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
 	#if varname == "bx":
 	#	plt.axis([bx_low, bx_high, 0., 1.05])
 
@@ -460,8 +463,6 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output
 		plt.close()
 	else:
 		plt.show()
-
-	return
 
 	# Save .csv file with DataFrame of splitting probability graph
 
@@ -476,13 +477,15 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output
 	if not os.path.exists(graph_dir):
 		os.makedirs(graph_dir)
 
-	d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
-	df_graph = pd.DataFrame(data=d)
-	filename = graph_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".csv"
-	print("Saving graph data as DataFrame in " + filename)
-	df_graph.to_csv(filename, index=False)
-	df_graph.head()
+	if output == True:
+		d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
+		df_graph = pd.DataFrame(data=d)
+		filename = graph_dir + "prob_" + luminame + "_" + ladder + "_" + varname + str(nfull) + str(nbroken) + ".csv"
+		print("Saving graph data as DataFrame in " + filename)
+		df_graph.to_csv(filename, index=False)
+		df_graph.head()
 
+	return
 
 # Function which reads the tree and store the data in 3 dataframes: complete data, cols=nfull data and cols=nfull size=nbroken data
 # The 3 dataframes are returned by the function
