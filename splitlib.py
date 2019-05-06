@@ -205,7 +205,11 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	index_list = df_broken.index.values		# List of indices of selected data
 	if not index_list.size > 0:
 		print("Dataframe is empty")
-		return None, np.array([0]*(len(bins) - 1)), np.array([0]*(len(bins) - 1))
+		if type(bins) is list:
+			return None, np.array([0]*(len(bins) - 1)), np.array([0]*(len(bins) - 1))
+		else:
+			return None, np.array([0]*bins), np.array([0]*bins)
+
 	nfull = df_full['cols'][index_list[0]]
 	nbroken = df_full['size'][index_list[0]]
 	nrows = df_full['rows'][index_list[0]]
@@ -229,7 +233,10 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	path_list = main_dir.split("/")
 	path_list.pop(-2)
 	main_dir = "/".join(path_list)
-	plot_dir = plot_dir + luminame + "/"
+	if "_" in luminame:
+		plot_dir = plot_dir + luminame.split("_")[0] + "/"
+	else:
+		plot_dir = plot_dir + luminame + "/"
 	plt.rcParams['agg.path.chunksize'] = 10000
 
 	if not os.path.exists(plot_dir):
@@ -241,9 +248,10 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	colors = ["yellow", "blue", "green", "red", "darkturquoise"]
 	colors2 = ["darkorange", "deepskyblue", "lawngreen", "tomato", "cornflowerblue"]
 	lumi_low = 0.; lumi_high = 0.
-	bx_low = 1980; bx_high = 2050
+	#bx_low = 1980; bx_high = 2050
+	bx_low = 0; bx_high = 3000
 	
-	axislist = [[-3.2, 3.2, 0., 1.05], [-1.05*np.pi, 1.05*np.pi, 0., 0.9], [], [bx_low, bx_high, 0., 1.05], [0.95*2e5, 1.05*7e5, 0., 0.6]]
+	axislist = [[-3.2, 3.2, 0., 1.05], [-1.05*np.pi, 1.05*np.pi, 0., 0.9], [], [bx_low, bx_high, 0., 1.05], [0., 1.05*7e5, 0., 1.0]]
 
 	index = varlist.index(varname)
 
@@ -380,9 +388,12 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		df_graph.to_csv(filename, index=False)
 		print(df_graph.head())
 
-	return axlimits, n_broken, n_full
+	if varname == "tres":
+		return axlimits, n_broken, n_full, bins_broken
+	else:
+		return axlimits, n_broken, n_full
 
-def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output=True, plot_dir="./"):
+def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", luminame="xxx", output=True, plot_dir="./"):
 	if len(n_full) != len(n_broken):
 		print("'n_full' and 'n_broken' have different length. Aborting.")
 		return
@@ -406,13 +417,21 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output
 
 	shutil.copyfile(main_dir + "index.php", plot_dir + "index.php")
 
-	varname = "global_eta"
+	varlist = ["global_eta", "tres"]
+	#varname = "global_eta"
 	nbins_eta = 16
-	bins = np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist()
-	axlimits = [-3.2, 3.2, 0., 1.05]
+	#bins_list = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 50]
+	axislist = [[-3.2, 3.2, 0., 1.05], [0, 1e7, 0., 1.05]]
 	prob = []
 	splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
 	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
+
+	index = varlist.index(varname)
+	#bins = bins_list[index]
+	axlimits = axislist[index]
+
+	if varname == "tres":
+		n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled", log=True, stacked=True, label="cols=" + str(nfull))
 
 	x_coord_plot = bins[:-1]
 
@@ -454,6 +473,10 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, luminame="xxx", output
 		plt.legend(loc="upper right")
 		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 		plt.text(-3.0, 0.95, "2017 combined data", bbox=dict(facecolor='yellow', alpha=0.75))
+	if varname == "tres":
+		plt.text(50000, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(50000, 0.95, "2017 combined data", bbox=dict(facecolor='yellow', alpha=0.75))
+
 		#plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
 	#if varname == "bx":
 	#	plt.axis([bx_low, bx_high, 0., 1.05])
@@ -519,7 +542,7 @@ def select_cols(tree, nfull, nbroken, selection=False):
 def select_cols_df(df_grid, nfull, nbroken, selection=False):
 
 	print("Selecting cols==" + str(nfull))
-	df_grid_full = df_grid.query('(cols == ' + str(nfull) + ') & (tres > 2e5) & (tres < 5e6)')
+	df_grid_full = df_grid.query('(cols == ' + str(nfull) + ')')
 
 	if selection == True:
 		print("Selecting pixels")
@@ -536,6 +559,13 @@ def select_cols_df(df_grid, nfull, nbroken, selection=False):
 	print("entries = %d" % df_grid.shape[0])
 
 	return df_grid, df_grid_full, df_grid_broken
+
+def select_tres(df, treslimits):
+	print("Selecting tres in ", end="")
+	print(treslimits)
+	df_grid_tres = df.query('(tres > ' + str(treslimits[0]) + ') & (tres < ' + str(treslimits[1]) + ')')
+	print("entries = %d" % df_grid_tres.shape[0])
+	return df_grid_tres
 
 def select_rows(df, nrows):
 	print("Selecting rows==" + str(nrows), end="\t")

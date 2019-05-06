@@ -90,13 +90,16 @@ luminame = []
 for (i, l) in enumerate(lumi_bins[:-1]):
 	luminame.append(str(int(0.5*(lumi_bins[i+1] + lumi_bins[i]))))
 
-for nfull in [10, 9, 8, 7, 6, 5, 4]:
+#for nfull in [10, 9, 8, 7, 6, 5, 4]:
+for nfull in [8, 7, 6, 5, 4]:
 	nbroken = nfull - 2
 	df_full_list = []
 	df_broken_list = []
 	for (i, df) in enumerate(df_list):
 		print("Selecting chunk %d of dataframe" % (i+1))
 		df_grid, df_grid_full, df_grid_broken = sp.select_cols_df(df, nfull, nbroken, selection=True)
+		df_grid_full = df_grid_full.query('tres < 1e7')			# Preliminary selection on tres
+		df_grid_broken = df_grid_broken.query('tres < 1e7')
 		df_full_list.append(df_grid_full)
 		df_broken_list.append(df_grid_broken)
 
@@ -104,6 +107,8 @@ for nfull in [10, 9, 8, 7, 6, 5, 4]:
 		# Ladder selection after choosing the binning: in this way either in case "inner" or "outer", we'll have same binning
 		n_broken_sum_list = []
 		n_full_sum_list = []
+		n_broken_tres_sum_list = []
+		n_full_tres_sum_list = []
 		for (i, item) in enumerate(df_full_list):
 			print("---------------------------------------------------")
 			print("Selecting chunk %d of dataframe" % (i+1))
@@ -118,6 +123,9 @@ for nfull in [10, 9, 8, 7, 6, 5, 4]:
 			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50]
 			n_broken_lumi_list = []
 			n_full_lumi_list = []
+			n_broken_lumi_tres_list = []
+			n_full_lumi_tres_list = []
+			bins_tres_list = []
 			n_broken_sum = []
 			n_full_sum = []
 			for j in range(len(lumi_bins) - 1):
@@ -134,9 +142,14 @@ for nfull in [10, 9, 8, 7, 6, 5, 4]:
 				#	continue
 				# Operation pursued only for var = global_eta
 				axlimits, n_broken_lumi, n_full_lumi = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[0], axlimits=[], varname=varlist[0], luminame=luminame[j], output=False, plot_dir=plot_dir)
+				axlimits, n_broken_lumi_tres, n_full_lumi_tres, bins_tres = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-1], axlimits=[], varname=varlist[-1], luminame=luminame[j], output=False, plot_dir=plot_dir)
+				#sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-2], axlimits=[], varname=varlist[-2], luminame=luminame[j] + "_0" + str(i+1), output=True, plot_dir=plot_dir)
 				#if (n_broken_lumi != []) & (n_full_lumi != []):
 				n_broken_lumi_list.append(n_broken_lumi)
 				n_full_lumi_list.append(n_full_lumi)
+				n_broken_lumi_tres_list.append(n_broken_lumi_tres)
+				n_full_lumi_tres_list.append(n_full_lumi_tres)
+				bins_tres_list.append(bins_tres)
 				#else:
 				#	n_broken_lumi_list.append(np.array([0]*(len(bins[0]) - 1)))
 				#	n_full_lumi_list.append(np.array([0]*len((bins[0]) - 1)))
@@ -150,7 +163,17 @@ for nfull in [10, 9, 8, 7, 6, 5, 4]:
 					n_broken_sum_list[j] = list_sum(n_broken_sum_list[j], n_broken_lumi_list[j])
 					n_full_sum_list[j] = list_sum(n_full_sum_list[j], n_full_lumi_list[j])
 
+			for (j, item) in enumerate(n_broken_lumi_tres_list):
+				if i == 0:
+					n_broken_tres_sum_list.append(list_sum([], n_broken_lumi_tres_list[j]))
+					n_full_tres_sum_list.append(list_sum([], n_full_lumi_tres_list[j]))
+				else:
+					n_broken_tres_sum_list[j] = list_sum(n_broken_tres_sum_list[j], n_broken_lumi_tres_list[j])
+					n_full_tres_sum_list[j] = list_sum(n_full_tres_sum_list[j], n_full_lumi_tres_list[j])
+
 		for (j, item) in enumerate(n_broken_sum_list):
 			print("lumi" + luminame[j])
 			if n_broken_sum_list[j] != [0]*(len(bins[0]) - 1):
-				sp.splitprob_n(n_full_sum_list[j], n_broken_sum_list[j], nfull, nbroken, ladder, luminame=luminame[j], output=True, plot_dir=plot_dir)
+				sp.splitprob_n(n_full_sum_list[j], n_broken_sum_list[j], nfull, nbroken, ladder, bins=bins[0], varname="global_eta", luminame=luminame[j], output=True, plot_dir=plot_dir)
+				sp.splitprob_n(n_full_tres_sum_list[j], n_broken_tres_sum_list[j], nfull, nbroken, ladder, bins=bins_tres_list[j], varname="tres", luminame=luminame[j], output=True, plot_dir=plot_dir)
+
