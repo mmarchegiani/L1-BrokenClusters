@@ -30,7 +30,7 @@ def list_sum(a, b):
 
 
 filename = "/scratch/mmarcheg/lumi_data/clusters_V1_Run2017C_Fill6061.root"
-plot_dir = "../ntuplesPixel/plots/combined2017/"
+plot_dir = "../ntuplesPixel/plots/combined2017_Run03/"
 #os.mkdir(plot_dir)
 print("Plots will be saved in " + plot_dir)
 print("Opening %s" % filename)
@@ -119,8 +119,9 @@ for nfull in [8, 7, 6, 5, 4]:
 			varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 			axlist = []
 			nbins_eta = 16
+			nbins_tres = 20
 			#bins = [100, 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50]
-			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50]
+			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), nbins_tres]
 			n_broken_lumi_list = []
 			n_full_lumi_list = []
 			n_broken_lumi_tres_list = []
@@ -142,7 +143,7 @@ for nfull in [8, 7, 6, 5, 4]:
 				#	continue
 				# Operation pursued only for var = global_eta
 				axlimits, n_broken_lumi, n_full_lumi = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[0], axlimits=[], varname=varlist[0], luminame=luminame[j], output=False, plot_dir=plot_dir)
-				axlimits, n_broken_lumi_tres, n_full_lumi_tres, bins_tres = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-1], axlimits=[], varname=varlist[-1], luminame=luminame[j], output=False, plot_dir=plot_dir)
+				bins_tres, n_broken_lumi_tres, n_full_lumi_tres = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-1], axlimits=[], varname=varlist[-1], luminame=luminame[j], output=False, plot_dir=plot_dir)
 				#sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-2], axlimits=[], varname=varlist[-2], luminame=luminame[j] + "_0" + str(i+1), output=True, plot_dir=plot_dir)
 				#if (n_broken_lumi != []) & (n_full_lumi != []):
 				n_broken_lumi_list.append(n_broken_lumi)
@@ -153,7 +154,7 @@ for nfull in [8, 7, 6, 5, 4]:
 				#else:
 				#	n_broken_lumi_list.append(np.array([0]*(len(bins[0]) - 1)))
 				#	n_full_lumi_list.append(np.array([0]*len((bins[0]) - 1)))
-			print(n_broken_lumi_list)
+			print(bins_tres_list)
 			
 			for (j, item) in enumerate(n_broken_lumi_list):
 				if i == 0:
@@ -175,5 +176,6 @@ for nfull in [8, 7, 6, 5, 4]:
 			print("lumi" + luminame[j])
 			if n_broken_sum_list[j] != [0]*(len(bins[0]) - 1):
 				sp.splitprob_n(n_full_sum_list[j], n_broken_sum_list[j], nfull, nbroken, ladder, bins=bins[0], varname="global_eta", luminame=luminame[j], output=True, plot_dir=plot_dir)
+			if n_broken_tres_sum_list[j] != [0]*nbins_tres:
 				sp.splitprob_n(n_full_tres_sum_list[j], n_broken_tres_sum_list[j], nfull, nbroken, ladder, bins=bins_tres_list[j], varname="tres", luminame=luminame[j], output=True, plot_dir=plot_dir)
 

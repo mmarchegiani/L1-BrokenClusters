@@ -45,21 +45,22 @@ for nfull in [10, 9, 8, 7, 6, 5, 4]:
 					filename = sub_dir + file
 					df_buffer = pd.read_csv(filename)
 					fileread = filename
-					plt.errorbar(df_buffer[varname], df_buffer['prob'], yerr=df_buffer['sigma'], fmt='.', ecolor=colors[i], c=colors[i], label=dir)
+					plt.errorbar(df_buffer[varname], df_buffer['prob'], yerr=df_buffer['sigma'], fmt='.', ecolor=colors[i], c=colors[i], label=dir[:4] + " = " + dir[4:])
 		
 		splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
 		plt.title("prob splitting " + splitmode + " " + varname)
 		plt.xlabel(varname)
+		if varname == "global_eta":
+			plt.xlabel("$\\eta$")
 		plt.ylabel("prob" + splitmode)
 		plt.grid(True)
-		plt.legend(loc="upper left")
 		#plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
 		plt.axvline(-1, 0., 1.05, linestyle='--')
 		plt.axvline(+1, 0., 1.05, linestyle='--')
 		plt.axis(axlimits)
 		plt.legend(loc="upper center")
 		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(-3.0, 0.95, "2017 combined data", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.95, "8b4e data", bbox=dict(facecolor='yellow', alpha=0.75))
 
 		if output == True:
 			dest_file = plot_dir + "prob_multilumi_" + ladder + "_" + varname + str(nfull) + str(nbroken) + ".png"
