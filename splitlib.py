@@ -4,6 +4,7 @@ import uproot
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import bx_index as bi
 
 # Function to plot the histograms of #clusters(variable) where variable is called 'varname'
 def splitprob(df_full, df_broken, bins=100, axlimits=[], varname="", output=True, plot_dir="./"):
@@ -206,9 +207,9 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	if not index_list.size > 0:
 		print("Dataframe is empty")
 		if type(bins) is list:
-			return None, np.array([0]*(len(bins) - 1)), np.array([0]*(len(bins) - 1))
+			return bins, np.array([0]*(len(bins) - 1)), np.array([0]*(len(bins) - 1))
 		else:
-			return None, np.array([0]*bins), np.array([0]*bins)
+			return bins, np.array([0]*bins), np.array([0]*bins)
 
 	nfull = df_full['cols'][index_list[0]]
 	nbroken = df_full['size'][index_list[0]]
@@ -244,14 +245,14 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 
 	shutil.copyfile(main_dir + "index.php", plot_dir + "index.php")
 
-	varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
-	colors = ["yellow", "blue", "green", "red", "darkturquoise"]
-	colors2 = ["darkorange", "deepskyblue", "lawngreen", "tomato", "cornflowerblue"]
+	varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres", "ti"]
+	colors = ["yellow", "blue", "green", "red", "darkturquoise", "red"]
+	colors2 = ["darkorange", "deepskyblue", "lawngreen", "tomato", "cornflowerblue", "tomato"]
 	lumi_low = 0.; lumi_high = 0.
-	#bx_low = 1980; bx_high = 2050
-	bx_low = 0; bx_high = 3000
+	bx_low = 1980; bx_high = 2050
+	#bx_low = 0; bx_high = 3000
 	
-	axislist = [[-3.2, 3.2, 0., 1.05], [-1.05*np.pi, 1.05*np.pi, 0., 0.9], [], [bx_low, bx_high, 0., 1.05], [0., 1.05*7e5, 0., 1.0]]
+	axislist = [[-3.2, 3.2, 0., 1.05], [-1.05*np.pi, 1.05*np.pi, 0., 0.9], [], [bx_low, bx_high, 0., 1.05], [0., 1.05*7e5, 0., 1.0], [-0.5, 8.5, 0., 1.05]]
 
 	index = varlist.index(varname)
 
@@ -353,13 +354,15 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 	plt.grid(True)
 	plt.axis(axlimits)
 	if varname == "global_eta":
+		plt.xlabel("$\\eta$")
 		plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
 		plt.axvline(+1, 0., 1.05, linestyle='--')
 		plt.legend(loc="upper right")
 		plt.text(-3.0, 0.95, laddername + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 		plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
-	#if varname == "bx":
-	#	plt.axis([bx_low, bx_high, 0., 1.05])
+
+	if varname == "ti":
+		plt.xlabel("Bunch Train Index")
 
 	if output == True:
 		plt.savefig(plot_dir + "prob_" + luminame + "_" + laddername + "_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
@@ -388,14 +391,19 @@ def splitprob_lumi(df_full, df_broken, bins=[], axlimits=[], varname="", luminam
 		df_graph.to_csv(filename, index=False)
 		print(df_graph.head())
 
-	if varname == "tres":
-		return axlimits, n_broken, n_full, bins_broken
+	if (varname == "tres") | (varname == "bx"):
+		return bins_broken, n_broken, n_full
 	else:
 		return axlimits, n_broken, n_full
 
-def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", luminame="xxx", output=True, plot_dir="./"):
+def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", luminame="xxx", output=True, plot_dir="./", mode="combined 2017"):
 	if len(n_full) != len(n_broken):
 		print("'n_full' and 'n_broken' have different length. Aborting.")
+		return
+
+	if (type(bins) is not list) & (type(bins) is not np.ndarray):
+		print("bins is not a list nor numpy.ndarray")
+		print("type(bins) = " + str(type(bins)))
 		return
 
 	main_dir = ""
@@ -417,11 +425,13 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 
 	shutil.copyfile(main_dir + "index.php", plot_dir + "index.php")
 
-	varlist = ["global_eta", "tres"]
+	varlist = ["global_eta", "bx", "tres", "ti"]
 	#varname = "global_eta"
 	nbins_eta = 16
+	bx_low = 1980
+	bx_high = 2050
 	#bins_list = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 50]
-	axislist = [[-3.2, 3.2, 0., 1.05], [0, 1e7, 0., 1.05]]
+	axislist = [[-3.2, 3.2, 0., 1.05], [bx_low, bx_high, 0., 1.05], [0., bins[-1], 0., 1.05], [-0.5, 8.5, 0., 1.05]]
 	prob = []
 	splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
 	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
@@ -429,9 +439,6 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 	index = varlist.index(varname)
 	#bins = bins_list[index]
 	axlimits = axislist[index]
-
-	if varname == "tres":
-		n_full, bins_full, patches_full = plt.hist(df_full[varname], bins=bins, color=colors[index], ec="black", histtype="stepfilled", log=True, stacked=True, label="cols=" + str(nfull))
 
 	x_coord_plot = bins[:-1]
 
@@ -466,16 +473,23 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 	plt.xlabel(varname)
 	plt.ylabel("prob" + splitmode)
 	plt.grid(True)
-	plt.axis(axlimits)
+	if axlimits != None:
+		axlimits[-1] = 1.05*max(prob)		# Setting upper limit of the plot
+		plt.axis(axlimits)
 	if varname == "global_eta":
+		plt.xlabel("$\\eta$")
 		plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
 		plt.axvline(+1, 0., 1.05, linestyle='--')
 		plt.legend(loc="upper right")
 		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(-3.0, 0.95, "2017 combined data", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 	if varname == "tres":
 		plt.text(50000, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(50000, 0.95, "2017 combined data", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(50000, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+	if varname == "ti":
+		plt.xlabel("Bunch Train Index")
+		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 
 		#plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
 	#if varname == "bx":
