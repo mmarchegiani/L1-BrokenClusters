@@ -415,9 +415,13 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 	path_list = main_dir.split("/")
 	path_list.pop(-2)
 	main_dir = "/".join(path_list)
-	mean_lumi = float(luminame)
-	luminame = "lumi" + luminame
-	plot_dir = plot_dir + luminame + "/"
+	if luminame != "inclusive":
+		mean_lumi = float(luminame)
+		luminame = "lumi" + luminame
+		plot_dir = plot_dir + luminame + "/"
+	else:
+		mean_lumi = 0.
+
 	plt.rcParams['agg.path.chunksize'] = 10000
 
 	if not os.path.exists(plot_dir):
@@ -431,7 +435,7 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 	bx_low = 1980
 	bx_high = 2050
 	#bins_list = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 50]
-	axislist = [[-3.2, 3.2, 0., 1.05], [bx_low, bx_high, 0., 1.05], [0., bins[-1], 0., 1.05], [-0.5, 8.5, 0., 1.05]]
+	axislist = [[-3.2, 3.2, 0., 1.05], [bx_low, bx_high, 0., 1.05], [0., bins[-1], 0., 1.05], [-0.5, 8.5, 0., 0.2]]
 	prob = []
 	splitmode = "(" + str(nfull) + "->" + str(nbroken) + ")"
 	print("Plotting scatter plot of prob" + splitmode + " " + varname + "...")
@@ -469,27 +473,42 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 
 	plt.errorbar(x_coord_plot, prob, yerr=np.array(sigma), fmt='.', ecolor='r', c='r', label="data")
 
-	plt.title("prob splitting " + splitmode + "(meanLumi=" + luminame + ") vs " + varname)
+	if luminame != "inclusive":
+		plt.title("prob splitting " + splitmode + "(meanLumi=" + luminame + ") vs " + varname)
+	else:
+		plt.title("prob splitting " + splitmode + " (" + luminame + ") vs " + varname)
 	plt.xlabel(varname)
 	plt.ylabel("prob" + splitmode)
 	plt.grid(True)
+	toplimit = 0.
 	if axlimits != None:
-		axlimits[-1] = 1.05*max(prob)		# Setting upper limit of the plot
-		plt.axis(axlimits)
+		toplimit = np.nanmax(prob)
+		axlimits[-1] = 1.05*toplimit		# Setting upper limit of the plot
+		#print(prob)
+		#print("axlimits = ", end="")
+		#print(axlimits)
+		#print("max(prob) = %f" % max(prob))
 	if varname == "global_eta":
 		plt.xlabel("$\\eta$")
 		plt.axvline(-1, 0., 1.05, linestyle='--', label ="central bin")
 		plt.axvline(+1, 0., 1.05, linestyle='--')
 		plt.legend(loc="upper right")
-		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(-3.0, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.85*toplimit, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(-3.0, 0.95*toplimit, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 	if varname == "tres":
-		plt.text(50000, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(50000, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(50000, 0.85*toplimit, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(50000, 0.95*toplimit, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 	if varname == "ti":
 		plt.xlabel("Bunch Train Index")
-		plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(-3.0, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+		if luminame == "inclusive":
+			axlimits[-1] = 0.23
+			plt.text(1., 0.85*axlimits[-1]/1.05, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+			plt.text(1., 0.95*axlimits[-1]/1.05, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+		else:
+			plt.text(1., 0.85*toplimit, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+			plt.text(1., 0.95*toplimit, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+	
+	plt.axis(axlimits)
 
 		#plt.text(-3.0, 0.85, plot_dir.split("/")[-3] + ".root", bbox=dict(facecolor='yellow', alpha=0.75))
 	#if varname == "bx":
@@ -497,6 +516,12 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 
 	if output == True:
 		plt.savefig(plot_dir + "prob_" + luminame + "_" + ladder + "_" + varname + str(nfull) + str(nbroken) + ".png", format="png", dpi=300)
+		if varname == "tres":
+			axlimits[-1] = 0.20
+			plt.text(50000, 0.85*axlimits[-1]/1.05, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+			plt.text(50000, 0.95*axlimits[-1]/1.05, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+			plt.axis(axlimits)
+			plt.savefig(plot_dir + "prob_" + luminame + "_" + ladder + "_" + varname + str(nfull) + str(nbroken) + "_scaled.png", format="png", dpi=300)			
 		plt.close()
 	else:
 		plt.show()
@@ -514,7 +539,7 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 	if not os.path.exists(graph_dir):
 		os.makedirs(graph_dir)
 
-	if output == True:
+	if (output == True) & (luminame != "inclusive"):
 		d = {'meanLumi' : (mean_lumi*np.ones_like(x_coord_plot)).tolist(), 'n_broken' : n_broken, 'n_full' : n_full, varname : x_coord_plot, 'prob' : prob, 'sigma' : sigma}
 		df_graph = pd.DataFrame(data=d)
 		filename = graph_dir + "prob_" + luminame + "_" + ladder + "_" + varname + str(nfull) + str(nbroken) + ".csv"
@@ -673,3 +698,24 @@ def cols_distrib(df, threshold, lumi_bins, ladder, output=True, plot_dir="./"):
 
 	return
 
+def concat(df_list):
+    df_new_list = []
+
+    df = df_list[0]
+    for df_item in df_list[1:]:
+        df = df.append(df_item)
+
+    return df
+
+def list_sum(a, b):
+	sum = []
+	if (len(a) != len(b)) & ((a != []) & (b != [])):
+		sys.exit("Trying to sum two lists with different length. Aborting.")
+	else:
+		if a == []:
+			a = [0]*len(b)
+		if b == []:
+			b = [0]*len(a)
+		for i in range(len(a)):
+			sum.append(a[i] + b[i])
+	return sum

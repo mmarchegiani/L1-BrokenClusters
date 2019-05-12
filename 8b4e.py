@@ -6,31 +6,8 @@ import matplotlib.pyplot as plt
 import splitlib as sp
 import bx_index as bi
 
-def concat(df_list):
-    df_new_list = []
-
-    df = df_list[0]
-    for df_item in df_list[1:]:
-        df = df.append(df_item)
-
-    return df
-
-def list_sum(a, b):
-	sum = []
-	if (len(a) != len(b)) & ((a != []) & (b != [])):
-		sys.exit("Trying to sum two lists with different length. Aborting.")
-	else:
-		if a == []:
-			a = [0]*len(b)
-		if b == []:
-			b = [0]*len(a)
-		for i in range(len(a)):
-			sum.append(a[i] + b[i])
-	return sum
-
-
 filename = "/scratch/mmarcheg/lumi_data/Run305064.root"
-plot_dir = "../ntuplesPixel/plots/8b4e_TrainIndex/"
+plot_dir = "../ntuplesPixel/plots/8b4e_TrainIndex02/"
 if not os.path.exists(plot_dir):
 	os.makedirs(plot_dir)
 print("Plots will be saved in " + plot_dir)
@@ -97,8 +74,8 @@ luminame = []
 for (i, l) in enumerate(lumi_bins[:-1]):
 	luminame.append(str(int(0.5*(lumi_bins[i+1] + lumi_bins[i]))))
 
-#for nfull in [10, 9, 8, 7, 6, 5, 4]:
-for nfull in [7, 6]:
+for nfull in [10, 9, 8, 7, 6, 5, 4]:
+#for nfull in [7, 6]:
 	nbroken = nfull - 2
 	df_full_list = []
 	df_broken_list = []
@@ -126,7 +103,7 @@ for nfull in [7, 6]:
 			axlist = []
 			nbins_eta = 16
 			#bins = [100, 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50]
-			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50, np.linspace(-0.5, 8.5, 10)]
+			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50, np.linspace(-0.5, 8.5, 10).tolist()]
 			n_broken_lumi_list = []
 			n_full_lumi_list = []
 			n_broken_lumi_bx_list = []
@@ -149,6 +126,7 @@ for nfull in [7, 6]:
 				axlimits, n_broken_lumi, n_full_lumi = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[0], axlimits=[], varname=varlist[0], luminame=luminame[j], output=False, plot_dir=plot_dir)
 				#sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-1], axlimits=[], varname=varlist[-1], luminame=luminame[j] + "_0" + str(i+1), output=True, plot_dir=plot_dir)
 				bins_bx, n_broken_lumi_bx, n_full_lumi_bx = sp.splitprob_lumi(df_grid_full_lumi, df_grid_broken_lumi, bins=bins[-1], axlimits=[], varname="ti", luminame=luminame[j] + "_0" + str(i+1), output=False, plot_dir=plot_dir)
+				print(bins_bx)
 				#if (n_broken_lumi != []) & (n_full_lumi != []):
 				n_broken_lumi_list.append(n_broken_lumi)
 				n_full_lumi_list.append(n_full_lumi)
@@ -160,19 +138,19 @@ for nfull in [7, 6]:
 			
 			for (j, item) in enumerate(n_broken_lumi_list):
 				if i == 0:
-					n_broken_sum_list.append(list_sum([], n_broken_lumi_list[j]))
-					n_full_sum_list.append(list_sum([], n_full_lumi_list[j]))
+					n_broken_sum_list.append(sp.list_sum([], n_broken_lumi_list[j]))
+					n_full_sum_list.append(sp.list_sum([], n_full_lumi_list[j]))
 				else:
-					n_broken_sum_list[j] = list_sum(n_broken_sum_list[j], n_broken_lumi_list[j])
-					n_full_sum_list[j] = list_sum(n_full_sum_list[j], n_full_lumi_list[j])
+					n_broken_sum_list[j] = sp.list_sum(n_broken_sum_list[j], n_broken_lumi_list[j])
+					n_full_sum_list[j] = sp.list_sum(n_full_sum_list[j], n_full_lumi_list[j])
 
 			for (j, item) in enumerate(n_broken_lumi_bx_list):
 				if i == 0:
-					n_broken_bx_sum_list.append(list_sum([], n_broken_lumi_bx_list[j]))
-					n_full_bx_sum_list.append(list_sum([], n_full_lumi_bx_list[j]))
+					n_broken_bx_sum_list.append(sp.list_sum([], n_broken_lumi_bx_list[j]))
+					n_full_bx_sum_list.append(sp.list_sum([], n_full_lumi_bx_list[j]))
 				else:
-					n_broken_bx_sum_list[j] = list_sum(n_broken_bx_sum_list[j], n_broken_lumi_bx_list[j])
-					n_full_bx_sum_list[j] = list_sum(n_full_bx_sum_list[j], n_full_lumi_bx_list[j])
+					n_broken_bx_sum_list[j] = sp.list_sum(n_broken_bx_sum_list[j], n_broken_lumi_bx_list[j])
+					n_full_bx_sum_list[j] = sp.list_sum(n_full_bx_sum_list[j], n_full_lumi_bx_list[j])
 
 		for (j, item) in enumerate(n_broken_sum_list):
 			print("lumi" + luminame[j])
