@@ -496,8 +496,9 @@ def splitprob_n(n_full, n_broken, nfull, nbroken, ladder, bins, varname="", lumi
 		plt.text(-3.0, 0.85*toplimit, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 		plt.text(-3.0, 0.95*toplimit, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 	if varname == "tres":
-		plt.text(50000, 0.85*toplimit, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-		plt.text(50000, 0.95*toplimit, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+		tres_high = 7e5
+		plt.text(0.8*tres_high, 0.15*toplimit, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+		plt.text(0.8*tres_high, 0.05*toplimit, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 	if varname == "ti":
 		plt.xlabel("Bunch Train Index")
 		if luminame == "inclusive":

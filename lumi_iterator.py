@@ -18,6 +18,9 @@ plot_dir = graph_dir.replace("graphdata", "plots")
 if plot_dir[-1] != "/":
 	plot_dir = plot_dir + "/"
 
+if not os.path.exists(plot_dir):
+	os.makedirs(plot_dir)
+
 for mod in ["8b4e", "combined2017"]:
 	if mod in graph_dir:
 		mode = mod
@@ -26,10 +29,15 @@ output = False
 if (sys.argv[2] == "-o") | (sys.argv[2] == "-output"):
 	output = True
 
-varlist = ["global_eta", "ti"]
+varlist = ["global_eta", "tres", "ti"]
+if mode == "combined2017":
+	varlist.pop(-1)
 colors = ["darkorange", "limegreen", "cornflowerblue", "purple", "darkgrey", "red", "green", "blue", "magenta", "cyan"]
 nbins_eta = 16
-bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), np.linspace(-0.5, 8.5, 10).tolist()]
+nbins_tres = 20
+tres_low = 0e5
+tres_high = 7e5
+bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), np.linspace(0, tres_high, nbins_tres).tolist(), np.linspace(-0.5, 8.5, 10).tolist()]
 fileread = None
 ls = os.listdir(graph_dir)
 ls.sort()
@@ -76,11 +84,16 @@ for varname in varlist:
 				plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 				plt.text(-3.0, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 				axlimits = [-3.2, 3.2, 0., 1.05]
+			if varname == "tres":
+				#plt.legend(loc="upper left")
+				plt.text(0.65*tres_high, 0.47, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+				plt.text(0.65*tres_high, 0.42, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+				axlimits = [tres_low, tres_high, 0., 0.50]
 			if varname == "ti":
 				plt.xlabel("Bunch Train Index")
 				plt.legend(loc="upper left")
-				plt.text(0., 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
-				plt.text(0., 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+				plt.text(6.5, 0.18, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
+				plt.text(6.5, 0.16, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
 				axlimits = [-0.5, 8.5, 0., 0.2]
 
 			plt.ylabel("prob" + splitmode)

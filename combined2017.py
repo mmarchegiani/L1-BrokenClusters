@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import splitlib as sp
 
 filename = "/scratch/mmarcheg/lumi_data/clusters_V1_Run2017C_Fill6061.root"
-plot_dir = "../ntuplesPixel/plots/combined2017_Run05/"
+plot_dir = "../ntuplesPixel/plots/combined2017_Run07/"
 if not os.path.exists(plot_dir):
 	os.makedirs(plot_dir)
 print("Plots will be saved in " + plot_dir)
@@ -69,6 +69,10 @@ luminame = []
 for (i, l) in enumerate(lumi_bins[:-1]):
 	luminame.append(str(int(0.5*(lumi_bins[i+1] + lumi_bins[i]))))
 
+tres_low = 3e5
+tres_high = 6e5
+nbins_eta = 16
+nbins_tres = 20
 #for nfull in [10, 9, 8, 7, 6, 5, 4]:
 for nfull in [8, 7, 6, 5, 4]:
 	nbroken = nfull - 2
@@ -77,8 +81,8 @@ for nfull in [8, 7, 6, 5, 4]:
 	for (i, df) in enumerate(df_list):
 		print("Selecting chunk %d of dataframe" % (i+1))
 		df_grid, df_grid_full, df_grid_broken = sp.select_cols_df(df, nfull, nbroken, selection=True)
-		#df_grid_full = df_grid_full.query('tres < 1e7')			# Preliminary selection on tres
-		#df_grid_broken = df_grid_broken.query('tres < 1e7')
+		df_grid_full = df_grid_full.query('(tres > ' + str(tres_low) + ') & (tres < ' + str(tres_high) + ')')			# Preliminary selection on tres
+		df_grid_broken = df_grid_broken.query('(tres > ' + str(tres_low) + ') & (tres < ' + str(tres_high) + ')')
 		df_full_list.append(df_grid_full)
 		df_broken_list.append(df_grid_broken)
 
@@ -99,10 +103,8 @@ for nfull in [8, 7, 6, 5, 4]:
 			print("BROKEN")
 			varlist = ["global_eta", "global_phi", "instaLumi", "bx", "tres"]
 			axlist = []
-			nbins_eta = 16
-			nbins_tres = 20
 			#bins = [100, 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), 50]
-			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), nbins_tres]
+			bins = [np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist(), 100, 4, df_grid_full_ladder['bx'].max() - df_grid_full_ladder['bx'].min(), np.linspace(0, tres_high, nbins_tres).tolist()]
 			n_broken_lumi_list = []
 			n_full_lumi_list = []
 			n_broken_lumi_tres_list = []
@@ -135,7 +137,7 @@ for nfull in [8, 7, 6, 5, 4]:
 				#else:
 				#	n_broken_lumi_list.append(np.array([0]*(len(bins[0]) - 1)))
 				#	n_full_lumi_list.append(np.array([0]*len((bins[0]) - 1)))
-			print(bins_tres_list)
+			#print(bins_tres_list)
 			
 			for (j, item) in enumerate(n_broken_lumi_list):
 				if i == 0:
@@ -157,5 +159,7 @@ for nfull in [8, 7, 6, 5, 4]:
 			print("lumi" + luminame[j])
 			bins_eta = np.linspace(-3.2, -1, nbins_eta + 1).tolist() + np.linspace(+1, +3.2, nbins_eta + 1).tolist()
 			sp.splitprob_n(n_full_sum_list[j], n_broken_sum_list[j], nfull, nbroken, ladder, bins=bins_eta, varname="global_eta", luminame=luminame[j], output=True, plot_dir=plot_dir)
-			sp.splitprob_n(n_full_tres_sum_list[j], n_broken_tres_sum_list[j], nfull, nbroken, ladder, bins=bins_tres_list[j], varname="tres", luminame=luminame[j], output=True, plot_dir=plot_dir)
+			bins_tres = np.linspace(0, tres_high, nbins_tres).tolist()
+			#sp.splitprob_n(n_full_tres_sum_list[j], n_broken_tres_sum_list[j], nfull, nbroken, ladder, bins=bins_tres_list[j], varname="tres", luminame=luminame[j], output=True, plot_dir=plot_dir)
+			sp.splitprob_n(n_full_tres_sum_list[j], n_broken_tres_sum_list[j], nfull, nbroken, ladder, bins=bins_tres, varname="tres", luminame=luminame[j], output=True, plot_dir=plot_dir)
 
