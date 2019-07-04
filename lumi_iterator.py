@@ -24,6 +24,8 @@ if not os.path.exists(plot_dir):
 for mod in ["8b4e", "combined2017"]:
 	if mod in graph_dir:
 		mode = mod
+		if mod == "combined2017":
+			mode = "2556b"
 
 output = False
 if (sys.argv[2] == "-o") | (sys.argv[2] == "-output"):
@@ -83,6 +85,7 @@ for varname in varlist:
 				plt.legend(loc="upper center")
 				plt.text(-3.0, 0.85, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 				plt.text(-3.0, 0.95, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+				plt.text(+1.15, 0.95, "[lumi] = $10^{30} cm^{-2} s^{-1}$", bbox=dict(facecolor='yellow', alpha=0.75))
 				axlimits = [-3.2, 3.2, 0., 1.05]
 			if varname == "tres":
 				#plt.legend(loc="upper left")
@@ -94,6 +97,7 @@ for varname in varlist:
 				plt.legend(loc="upper left")
 				plt.text(6.5, 0.18, ladder + " modules", bbox=dict(facecolor='yellow', alpha=0.75))
 				plt.text(6.5, 0.16, mode + " data", bbox=dict(facecolor='yellow', alpha=0.75))
+				plt.text(3.0, 0.18, "[lumi] = $10^{30} cm^{-2} s^{-1}$", bbox=dict(facecolor='yellow', alpha=0.75))
 				axlimits = [-0.5, 8.5, 0., 0.2]
 
 			plt.ylabel("prob" + splitmode)
